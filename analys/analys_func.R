@@ -28,6 +28,10 @@ extractChrByFormat <- function(gff, s.chr){
   gff$chr <- sub(paste(".*",s.chr,"(\\d+)", sep = ''), "\\1", gff$V1)
   if(sum(is.na(gff$chr)) > 0) stop('Check the chromosome formats (#3)')
   
+  if(nrow(gff) != n.gff){
+    pokazAttention('Not all the gff records were recognized, only',nrow(gff), 'out of', n.gff)
+  }
+  
   return(gff)
 }
 
@@ -80,10 +84,10 @@ gff2gff <- function(path.cons,
   
   gff1$idx = 1:nrow(gff1)
   # Get chromosome number from the first column of the gff file
-  if(!('chr' %in% gff1)){
+  # if(!('chr' %in% colnames(gff1))){
     gff1 =  extractChrByFormat(gff1, s.chr)
     gff1 = gff1[order(gff1$chr),]
-  }
+  # }
   
   colnames.1.to.9 = colnames(gff1)[1:9]
   colnames(gff1)[1:9] = paste('V', 1:9, sep = '')
@@ -91,7 +95,7 @@ gff2gff <- function(path.cons,
   gff2 = gff1
   gff2$len.init = gff2$V5 - gff2$V4 + 1
   gff2$V9 = paste(gff2$V9, ';len_init=', gff2$len.init, sep='')
-  gff2$V2 = 'panConvertor'
+  gff2$V2 = 'pannagram'
   gff2$V4 = -1
   gff2$V5 = -1
   gff2$V1 = gsub(acc1, acc2, gff2$V1)
@@ -172,7 +176,7 @@ gff2gff <- function(path.cons,
   
   colnames(gff2.loosing)[1:9] = colnames.1.to.9
   colnames(gff2.remain)[1:9] = colnames.1.to.9
-  return(gff2.remain = gff2.remain)
+  return(gff2.remain = gff2.remain[,1:9])
 }
 
 
@@ -290,6 +294,49 @@ plotMsaFragment <- function(path.cons,
                        s.chr = '_Chr' # in this case the pattern is "*_ChrX", where X is the number
                        ){
 
+  pokazAttention('Better not to use `plotMsaFragment`, but use `getMxFragment` together with `msaplot` ')
+  seq.mx = getMxFragment(path.cons = path.cons, 
+                         acc = acc,
+                         chr = chr,
+                         beg = beg,
+                         end = end,
+                         ref.acc=ref.acc,
+                         exact.match=exact.match,
+                         gr.accs.e=gr.accs.e,
+                         aln.type=aln.type,
+                         echo=echo,
+                         pangenome.name=pangenome.name,
+                         s.chr=s.chr)
+  
+  if(diff.mode){
+    p3 = msadiff(seq.mx)
+    s.diff = '_diff'
+  } else {
+    p3 = msaplot(seq.mx)
+    s.diff = ''
+  }  
+  
+
+  return(p3)
+}
+
+getMxFragment <- function(path.cons, 
+                            acc,
+                            chr,
+                            beg,
+                            end,
+                            ref.acc = '0', 
+                            exact.match=T,
+                            gr.accs.e = "accs/",
+                            aln.type = 'msa_',  # please provide correct prefix. For example, in case of reference-based, it's 'comb_'
+                            echo=T,
+                            pangenome.name='Pangen',
+                            s.chr = '_Chr' # in this case the pattern is "*_ChrX", where X is the number
+){
+  
+  gr.accs.e <- "accs/"
+  gr.accs.b <- "/accs"
+  
   i.chr = chr
   pos1 = beg
   pos2 = end
@@ -300,11 +347,18 @@ plotMsaFragment <- function(path.cons,
     pos1 = pos2
     pos2 = tmp
   }
+  
   # Get positions in the pangenome coordinates
-  file.msa = paste(path.cons, aln.type, i.chr, '_', i.chr, '_ref_',ref.acc,'.h5', sep = '')
-  v.acc = h5read(file.msa, paste(gr.accs.e, acc, sep = ''))
-  pos1.acc = which(v.acc == pos1)
-  pos2.acc = which(v.acc == pos2)
+  pangenome.names = unique(c(pangenome.name, 'Pangen', 'Pangenome', 'Pannagram'))
+  if(tolower(acc) %in% tolower(pangenome.names)){
+    pos1.acc = pos1
+    pos2.acc = pos2
+  } else {
+    file.msa = paste(path.cons, aln.type, i.chr, '_', i.chr, '_ref_',ref.acc,'.h5', sep = '')
+    v.acc = h5read(file.msa, paste(gr.accs.e, acc, sep = ''))
+    pos1.acc = which(v.acc == pos1)
+    pos2.acc = which(v.acc == pos2)  
+  }
   
   if(length(pos1.acc) == 0) stop('First position doesn’t exist')
   if(length(pos2.acc) == 0) stop('Second position doesn’t exist')
@@ -322,30 +376,22 @@ plotMsaFragment <- function(path.cons,
   seq.mx = matrix('-', nrow = length(accessions), ncol = pos2.acc - pos1.acc + 1)
   
   s.verbose = c('|', rep('-', length(accessions)), '|\n')
-  cat(paste0(s.verbose, collapse = ''))
-  cat('|')
+  if(echo) cat(paste0(s.verbose, collapse = ''))
+  if(echo) cat('|')
   for(i.acc in 1:length(accessions)){
     # pokaz(accessions[i.acc])
-    cat('.')
+    if(echo) cat('.')
     s.acc = h5read(file.seq.msa, paste(gr.accs.e, accessions[i.acc], sep = ''))
     
-    if(length(s.acc) != length(v.acc))  stop('MSA and seq do not match')
+    # if(length(s.acc) != length(v.acc))  stop('MSA and seq do not match')
     seq.mx[i.acc,] = s.acc[pos1.acc:pos2.acc]
   }
   rownames(seq.mx) = accessions
+  if(echo) cat('|\n')
   
-  
-  if(diff.mode){
-    p3 = msadiff(seq.mx)
-    s.diff = '_diff'
-  } else {
-    p3 = msaplot(seq.mx)
-    s.diff = ''
-  }  
-  
-  cat('|\n')
-  return(p3)
+  return(seq.mx)
 }
+
 
 #' ----------------------------------------------------------------------
 #' Fill a vector with 1 corresponding to Begin and End positions in GFF Annotations
