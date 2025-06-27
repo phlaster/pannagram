@@ -13,16 +13,14 @@ source "$INSTALLED_PATH/utils/argparse_simsearch.sh"
 #            MAIN
 # ----------------------------------------------------------------------------
 
-# Fix the output file result
 output_pref=$(add_symbol_if_missing "$output_pref" "/")
-if [ ! -d "${output_pref}" ]; then
-    mkdir -p "${output_pref}"
-fi
-output_pref="${output_pref}simsearch"
 pokaz_message "Prefex for the output file was changed to ${output_pref}"
 
-# ---------------------------------------------
-# Files for the blast
+# Create intermediate directory
+intermediate_dir="${output_pref}.intermediate"
+mkdir -p "$intermediate_dir"
+pokaz_message "Intermediate files will be stored in $intermediate_dir"
+
 
 # Add all FASTA files from path_genome to db_files if path_genome is not empty
 if [ ! -z "$path_genome" ]; then
@@ -30,7 +28,7 @@ if [ ! -z "$path_genome" ]; then
     path_genome=$(add_symbol_if_missing "$path_genome" "/")
     db_files=()
 
-    fasta_extensions=("fa" "fasta" "fna" "fas" "ffn" "frn")
+    fasta_extensions=("fa" "fasta" "fna" "fn" "fas" "ffn" "frn")
 
     for ext in "${fasta_extensions[@]}"; do
         for genome_file in "$path_genome"/*.$ext; do
@@ -58,46 +56,41 @@ fi
 # ---------------------------------------------
 # Run the pipeline
 
-BLAST_DB_DIR="${output_pref}blastdb"
-mkdir -p "$BLAST_DB_DIR"
-
-
 for db_file in "${db_files[@]}"; do
-    base_name=$(basename -- "$db_file")
-    base_name_no_ext="${base_name%.*}"  # Remove last extension
-    file_out_cnt="${output_pref}.${base_name_no_ext}_${sim_threshold}_${coverage}.cnt"
-    
-    # Skip processing if count file exists
+    db_pref=$(basename "$db_file")
+    db_pref=${db_pref%%.*}
+    file_out_cnt="${output_pref}${db_pref}_${sim_threshold}_${coverage}.cnt"
+    echo "File with counts ${file_out_cnt}"
     if [ -f "$file_out_cnt" ]; then
-        echo "Counts for ${base_name_no_ext} already exist."
-        continue
+       echo "Counts for ${db_name} estimated."
+       continue
     fi
 
-    # Handle after_blast_flag separately - uses existing BLAST results
+    # ---------------------------------------------
+    # Check if the BLAST database exists for the current file
+    db_file_full="${path_genome}${db_file}"
+    db_name="${db_pref}"  # Use consistent name
+    
+    # Create DB in intermediate_dir
+    db_path_intermediate="${intermediate_dir}/${db_name}"
+    if [ ! -f "${db_path_intermediate}.nhr" ]; then
+        pokaz_stage "Creating database for $db_file in intermediate directory..."
+        makeblastdb -in "$db_file_full" -dbtype nucl -out "$db_path_intermediate" > /dev/null
+    fi
+
+    blast_res="${intermediate_dir}/${db_name}.blast.tmp"
+
+    # Check if BLAST results should be used from an existing file
     if [ "$after_blast_flag" -eq 1 ]; then
-        blast_res="${output_pref}.${base_name_no_ext}.blast.tmp"
         if [ ! -f "${blast_res}" ]; then
-            pokaz_error "BLAST results file not found: ${blast_res}"
+            pokaz_error "Blast results file not found: ${file_input}"
             exit 1
         fi
     else
-        # ---------------------------------------------
-        # Create BLAST database in OUTPUT directory
-        db_output_path="${BLAST_DB_DIR}/${base_name_no_ext}"
-        db_file_full="${path_genome}${db_file}"
-        
-        # Create database if missing
-        if [ ! -f "${db_output_path}.nhr" ]; then
-            pokaz_stage "Creating BLAST database in output directory for $db_file..."
-            makeblastdb -in "$db_file_full" -dbtype nucl -out "$db_output_path" > /dev/null
-        fi
-
-        # ---------------------------------------------
-        # Run BLAST
-        blast_res="${output_pref}.${base_name_no_ext}.blast.tmp"
-        pokaz_stage "BLAST search in ${base_name_no_ext}..."
+        # Perform BLAST search
+        pokaz_stage "BLAST search in $db_file..."
         blastn \
-            -db "$db_output_path" \
+            -db "$db_path_intermediate" \
             -query "$file_input" \
             -out "$blast_res" \
             -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
@@ -120,7 +113,7 @@ for db_file in "${db_files[@]}"; do
         Rscript "$INSTALLED_PATH/sim/sim_in_seqs.R" \
             --in_file "$file_input" \
             --res "$blast_res" \
-            --out "${output_pref}.${db_name}.rds" \
+            --out "${output_pref}${db_name}.rds" \
             --sim "$sim_threshold" \
             --use_strand "$use_strand" \
             --db_file "$db_file_full" \
@@ -130,7 +123,7 @@ for db_file in "${db_files[@]}"; do
         Rscript "$INSTALLED_PATH/sim/sim_in_genome.R" \
             --in_file "$file_input" \
             --res "$blast_res" \
-            --out "${output_pref}.${db_name}" \
+            --out "${output_pref}${db_name}" \
             --sim "$sim_threshold" \
             --coverage "$coverage"
     fi
@@ -145,7 +138,7 @@ done
 # Combine all files to the total count file
 if [[ -z "$file_seq" && -z "$file_genome" ]]; then
     Rscript "$INSTALLED_PATH/sim/sim_in_genome_combine.R" \
-        --out "$output_pref" \
+        --out_dir "$output_pref" \
         --sim "$sim_threshold" \
         --coverage "$coverage"
 fi
