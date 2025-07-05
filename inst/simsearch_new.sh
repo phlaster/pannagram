@@ -2,7 +2,8 @@
 
 INSTALLED_PATH=$(Rscript -e "cat(system.file(package = 'pannagram'))")
 
-echo $INSTALLED_PATH
+FASTA_NUCL_EXT=("fa" "fasta" "fas" "fna" "fn" "ffn")
+FASTA_PROT_EXT=("fa" "fasta" "fas" "faa" "mpfa")
 
 source "$INSTALLED_PATH/utils/chunk_error_control.sh"
 source "$INSTALLED_PATH/utils/utils_bash.sh"
@@ -28,9 +29,7 @@ if [ ! -z "$path_genome" ]; then
     path_genome=$(add_symbol_if_missing "$path_genome" "/")
     db_files=()
 
-    fasta_extensions=("fa" "fasta" "fna" "fn" "fas" "ffn" "frn")
-
-    for ext in "${fasta_extensions[@]}"; do
+    for ext in "${FASTA_NUCL_EXT[@]}"; do
         for genome_file in "$path_genome"/*.$ext; do
             if [ -e "$genome_file" ]; then
                 db_file=$(basename "$genome_file")
@@ -38,7 +37,6 @@ if [ ! -z "$path_genome" ]; then
             fi
         done
     done
-
 fi
 
 # Add file_seq to db_files if it's not empty
@@ -60,9 +58,9 @@ for db_file in "${db_files[@]}"; do
     db_pref=$(basename "$db_file")
     db_pref=${db_pref%%.*}
     file_out_cnt="${output_pref}${db_pref}_${sim_threshold}_${coverage}.cnt"
-    echo "File with counts ${file_out_cnt}"
+    pokaz_message "File with counts ${file_out_cnt}"
     if [ -f "$file_out_cnt" ]; then
-       echo "Counts for ${db_name} estimated."
+       pokaz_message "Counts for ${db_name} estimated."
        continue
     fi
 
@@ -73,9 +71,9 @@ for db_file in "${db_files[@]}"; do
     
     # Create DB in intermediate_dir
     db_path_intermediate="${intermediate_dir}/${db_name}"
-    if [ ! -f "${db_path_intermediate}.nhr" ]; then
+    if [ ! -f "${db_path_intermediate}.phr" ] && [ ! -f "${db_path_intermediate}.nhr" ]; then
         pokaz_stage "Creating database for $db_file in intermediate directory..."
-        makeblastdb -in "$db_file_full" -dbtype nucl -out "$db_path_intermediate" > /dev/null
+        makeblastdb -in "$db_file_full" -dbtype "$dbtype" -out "$db_path_intermediate" > /dev/null
     fi
 
     blast_res="${intermediate_dir}/${db_name}.blast.tmp"
@@ -89,12 +87,28 @@ for db_file in "${db_files[@]}"; do
     else
         # Perform BLAST search
         pokaz_stage "BLAST search in $db_file..."
-        blastn \
-            -db "$db_path_intermediate" \
-            -query "$file_input" \
-            -out "$blast_res" \
-            -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
-            -perc_identity "$((sim_threshold - 1))"
+        if [ "$use_aa" -eq 1 ]; then
+            blast_res_pre="${blast_res}.pre"
+
+            $blast_cmd \
+                -db "$db_path_intermediate" \
+                -query "$file_input" \
+                -out "$blast_res_pre" \
+                -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
+                -num_threads "$cores"
+            
+            Rscript "$INSTALLED_PATH/sim/sim_modify_blast_results.R" \
+                --file.init "$blast_res_pre" \
+                --file.mod "$blast_res"
+        else
+            $blast_cmd \
+                -db "$db_path_intermediate" \
+                -query "$file_input" \
+                -out "$blast_res" \
+                -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
+                -perc_identity "$((sim_threshold - 1))" \
+                -num_threads "$cores"
+        fi
     fi
 
     # Check if the BLAST results file is empty
@@ -130,7 +144,8 @@ for db_file in "${db_files[@]}"; do
 
     # Remove the BLAST temporary file if not needed
     if [ "$keep_blast_flag" -ne 1 ] && [ "$after_blast_flag" -ne 1 ]; then
-        rm "$blast_res"
+        rm -f "$blast_res"
+        rm -f "$blast_res_pre"
     fi
 
 done
