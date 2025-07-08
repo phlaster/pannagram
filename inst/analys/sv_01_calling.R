@@ -378,7 +378,8 @@ if(nrow(sv.me) > 0){
 sv.gff = sv.gff[order(sv.gff$V10),]
 
 options(scipen = 999)
-write.table(sv.gff[,1:9], file.sv.gff, quote = F, row.names = F, col.names = F, sep = '\t')
+# write.table(sv.gff[,1:9], file.sv.gff, quote = F, row.names = F, col.names = F, sep = '\t')
+writeGFF(sv.gff[,1:9], file.sv.gff)
 options(scipen = 0)
 
 # ---- GFF In accessions ----
@@ -422,7 +423,8 @@ for(i.acc in 1:length(accessions)){
   file.sv.gff = paste(path.gff, 'svs_acc_', acc, '_v',sprintf("%02d", sv.version),'.gff', sep = '')
   
   options(scipen = 999)
-  write.table(df[,1:9], file.sv.gff, quote = F, row.names = F, col.names = F, sep = '\t')
+  # write.table(df[,1:9], file.sv.gff, quote = F, row.names = F, col.names = F, sep = '\t')
+  writeGFF(df[,1:9], file.sv.gff)
   options(scipen = 0)
 }
 
