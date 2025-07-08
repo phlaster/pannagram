@@ -150,7 +150,8 @@ for(acc in accessions){
     
     # Save GFF
     # write.table(gff.acc.pan[,1:9], file.raw.gff, row.names = F, col.names = F, quote = F, sep = '\t')
-    write.table(gff.acc.pan, file.pan.gff, row.names = F, col.names = F, quote = F, sep = '\t')
+    # write.table(gff.acc.pan, file.pan.gff, row.names = F, col.names = F, quote = F, sep = '\t')
+    writeGFF(gff.acc.pan, file.pan.gff)
     pokaz('saved')
   }
   gff.main.pan = rbind(gff.main.pan, gff.acc.pan)
@@ -591,18 +592,19 @@ for(i.chr in 1:5){
   }
 }
 
-write.table(gff.new.own, paste0(path.msa, 'gff_own.gff'), 
-            row.names = F,
-            col.names = F,
-            sep = '\t',
-            quote = F)
+# write.table(gff.new.own, paste0(path.msa, 'gff_own.gff'), 
+#             row.names = F,
+#             col.names = F,
+#             sep = '\t',
+#             quote = F)
+writeGFF(gff.new.own, paste0(path.msa, 'gff_own.gff'))
 
-
-write.table(gff.new.pan, paste0(path.msa,'gff_pan.gff'),
-            row.names = F,
-            col.names = F,
-            sep = '\t',
-            quote = F)
+# write.table(gff.new.pan, paste0(path.msa,'gff_pan.gff'),
+#             row.names = F,
+#             col.names = F,
+#             sep = '\t',
+#             quote = F)
+writeGFF(gff.new.pan, paste0(path.msa,'gff_pan.gff'))
 
 # save(list = ls(), file = paste0(path.msa,"tmp_workspace_end.RData"))
 

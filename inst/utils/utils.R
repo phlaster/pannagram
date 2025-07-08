@@ -1174,8 +1174,7 @@ blastres2gff <- function(v.blast, f.gff, to.sort = T){
     v.gff = v.gff[order(v.gff$col4),]
     v.gff = v.gff[order(v.gff$col1),]
   }
-  
-  write.table(v.gff, f.gff, sep = '\t', quote = F, row.names=F, col.names = F)
+  writeGFF(v.gff, gff.file)
 }
 
 
