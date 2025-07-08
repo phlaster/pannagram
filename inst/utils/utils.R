@@ -1143,11 +1143,11 @@ saveWorkspace <- function(file.ws){
 #' `blastres2gff` converts a data frame containing BLAST results into a GFF formatted file.
 #'
 #' @param v.blast A data frame containing the BLAST results. Expected columns are V1, V4, V5, V7, V8, len1, and strand.
-#' @param f.gff The file path where the GFF output will be saved.
+#' @param gff.file The file path where the GFF output will be saved.
 #' @param to.sort Boolean value indicating whether the output should be sorted. If `TRUE` (default), 
 #' the output is sorted by column 4 and then by column 1. If `FALSE`, the output is not sorted.
 #'
-#' @return This function does not return a value. It writes the GFF formatted data to a file specified by `f.gff`.
+#' @return This function does not return a value. It writes the GFF formatted data to a file specified by `gff.file`.
 #'
 #' @examples
 #' # Example usage (assuming `blast_results` is your data frame with BLAST results):
@@ -1155,7 +1155,7 @@ saveWorkspace <- function(file.ws){
 #' 
 #' @author Anna A. Igolkina 
 #' @export
-blastres2gff <- function(v.blast, f.gff, to.sort = T){
+blastres2gff <- function(v.blast, gff.file, to.sort = T){
   v.gff = data.frame(col1 = v.blast$V8,
                      col2 = 'blast2gff',
                      col3 = 'query',
@@ -1164,18 +1164,17 @@ blastres2gff <- function(v.blast, f.gff, to.sort = T){
                      col6 = '.',
                      col7 = v.blast$strand,
                      col8 = '.',
-                     col9 = paste('ID=Q', 1:nrow(v.blast),
-                                  ';query=',v.blast$V1,
-                                  ';len=', v.blast$len1,
-                                  ';coverage=', v.blast$V7, sep = ''))
+                     col9 = paste0('ID=Q', 1:nrow(v.blast),
+                                   ';query=',v.blast$V1,
+                                   ';len=', v.blast$len1,
+                                   ';coverage=', v.blast$V7))
   
   # Sorting
   if(to.sort){
     v.gff = v.gff[order(v.gff$col4),]
     v.gff = v.gff[order(v.gff$col1),]
   }
-  
-  write.table(v.gff, f.gff, sep = '\t', quote = F, row.names=F, col.names = F)
+  writeGFF(v.gff, gff.file)
 }
 
 

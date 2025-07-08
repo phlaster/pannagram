@@ -5,7 +5,7 @@ source(system.file("utils/utils.R", package = "pannagram"))
 
 # Define options
 option_list = list(
-  make_option(c("--out"), type = "character", default = NULL,
+  make_option(c("--out_dir"), type = "character", default = NULL,
               help = "Path to the output coverage file", metavar = "FILE"),
   make_option(c("--sim"), type = "numeric", default = 90,
               help = "Similarity threshold", metavar = "NUMBER"),
@@ -20,7 +20,7 @@ opt_parser = OptionParser(option_list = option_list)
 opt = parse_args(opt_parser)
 
 # Check for the presence of all required arguments
-output.file <- ifelse(!is.null(opt$out), opt$out, 
+output.dir <- ifelse(!is.null(opt$out_dir), opt$out_dir, 
                       stop("Output file not specified", call. = FALSE))
 sim.cutoff <- ifelse(!is.null(opt$sim), opt$sim, 
                      stop("Similarity threshold not specified", call. = FALSE))
@@ -37,8 +37,6 @@ coverage <- ifelse(is.null(opt$coverage), sim.cutoff, opt$coverage)
 
 
 # ---- Main ----
-
-output.dir = dirname(output.file)
 
 files <- list.files(path = output.dir, pattern = paste0(".*",sim.cutoff,'_', coverage,"\\.cnt$"), full.names = T)
 if(length(files) == 0) stop('No files with results')
@@ -74,13 +72,9 @@ acc.names <- sapply(basename(files), function(s){
 colnames(mx.cnt) = acc.names
 # pokaz(acc.names)
 
-
-# Save
-write.table(mx.cnt, paste0(output.file, '.total_cnt_', sim.cutoff,'_', coverage, '.txt'), 
-            quote = F, row.names = T, col.names = T, sep = '\t')
-
-
-
-
-
-
+write.table(mx.cnt,
+            file      = paste0(output.dir, "/_total_cnt_", sim.cutoff, "_", coverage, ".tsv"),
+            sep       = "\t",
+            quote     = FALSE,
+            row.names = TRUE,
+            col.names = NA)

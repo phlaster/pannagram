@@ -189,9 +189,9 @@ for(acc in accessions){
   write.table(gff.acc.pan, file.raw.txt,
               row.names = F, col.names = T, quote = F, sep = '\t')
   
-  write.table(gff.acc.pan[,1:9], file.raw.gff,
-              row.names = F, col.names = F, quote = F, sep = '\t')
-  
+  # write.table(gff.acc.pan[,1:9], file.raw.gff,
+  #             row.names = F, col.names = F, quote = F, sep = '\t')
+  writeGFF(gff.acc.pan[,1:9], file.raw.gff)
 }
 
 file.gff.main.idx.remain = paste0(path.res, 'gff_main_idx_remain.rds')
