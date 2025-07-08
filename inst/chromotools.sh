@@ -15,54 +15,42 @@ source $INSTALLED_PATH/utils/utils_bash.sh
 
 print_usage() {
     cat << EOF
-Usage: ${0##*/}  -path_in PATH_IN  [-path_out PATH_OUT]
-                [-remove WORDS_REMOVE] [-remain WORDS_REMAIN]
+Usage: ${0##*/} -genomes_in PATH_GENOMES -genomes_out PATH_OUTPUT \\
+                [-remove WORDS_REMOVE] [-remain WORDS_REMAIN] [-keep WORDS_KEEP] \\
                 [-cores NUM_CORES] [-h]
 
-OR
+   or: ${0##*/} -path_project PATH_PROJECT -genomes_out PATH_OUTPUT \\
+                -rearrange [-cores NUM_CORES] [-h]
 
-Usage: ${0##*/}  -path_in PATH_IN  [-path_out PATH_OUT]
-                -path_aln PATH_ALN [-resort] [-rearrange]
-                [-cores NUM_CORES] [-h]
-
-
-This script processes genomes either by filtering based on keywords 
-or by reordering and rearranging chromosomes according to a given alignment.
+Description:
+    This script processes genome files either by filtering based on specified keywords,
+    or by rearranging chromosomes according to a Pannagram project alignment.
 
 Options:
-    -h, --help                  Display this help message and exit.
-    -cores NUM_CORES            Number of cores for parallel processing (default: 1).
-
-Input/Output:
-    -path_in PATH_IN            Path to the input directory with genomes or chromosomes depends on the mode.
-    -path_out PATH_OUT          Path to the output directory for processed genomes.
-                                Default: PATH_IN/processed/
+    -h, --help                    Display this help message and exit.
+    -cores NUM_CORES              Number of cores for parallel processing. Default is 1.
 
 Filtering mode (before alignment):
-    -remove WORDS_REMOVE        Comma-separated list of words to filter out.
-    -remain WORDS_REMAIN        Comma-separated list of words to retain.
+    -genomes_in PATH_GENOMES      Path to input genomes (FASTA format).
+    -genomes_out PATH_OUTPUT      Path to output processed genomes.
+    -remove WORDS_REMOVE          Comma-separated list of words to remove (e.g., "plasmid,contig").
+    -remain WORDS_REMAIN          Comma-separated list of words to retain.
+    -keep WORDS_KEEP              Comma-separated list of words to keep regardless of other filters.
 
-Alignment-based mode (after alignment):
-    -path_aln PATH_ALN          Path to the alignment file used to reorder genomes.
-    -resort                     Reorder chromosomes according to the alignment.
-    -rearrange                  Additionally rearrange (split/merge) chromosomes 
-                                corresponding to the reference genome.
+Rearrangement mode (after alignment):
+    -path_project PATH_PROJECT    Path to the Pannagram output directory
+    -genomes_out PATH_OUTPUT      Path to output rearranged genomes.
+    -rearrange                    Enable rearrangement of chromosomes based on the reference.
 
 Examples:
 
-# Example 1: Filtering genomes based on keywords (before alignment)
-${0##*/} -path_in /data/genomes -path_out /data/genomes/filtered \\
-         -remove "contig,mitochondria" -remain "chromosome" -cores 4
+    # Example 1: Filter genome files before alignment
+    ${0##*/} -genomes_in /data/genomes -genomes_out /data/genomes_filtered \\
+             -remove "contig,mitochondria" -remain "chromosome" -cores 4
 
-
-# Example 2: Reordering genomes based on alignment (after alignment)
-${0##*/} -path_in /data/genomes -path_out /data/genomes/reordered \\
-         -path_aln /data/alignment/aln.fasta -resort -cores 4
-
-
-# Example 3: Rearranging genomes based on alignment (after alignment)
-${0##*/} -path_in /data/chromosomes -path_out /data/genomes/rearrange \\
-         -path_aln /data/alignments_reference/aln.fasta -rearrange -cores 4
+    # Example 2: Rearrange genomes based on alignment results
+    ${0##*/} -path_project /data/pannagram_project -genomes_out /data/genomes_rearranged \\
+             -rearrange -cores 4
 
 EOF
 }
@@ -81,81 +69,77 @@ fi
 
 # Default values
 cores=1
-path_in=""
-path_out=""
+path_project=""
+genomes_in=""
+genomes_out=""
 words_remove=""
 words_remain=""
 words_keep=""
 path_aln=""
-resort=false
 rearrange=false
 
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)        print_usage; exit 0 ;;
-        -cores)           require_arg $1 $2; cores=$2; shift 2 ;;
-        -path_in)         require_arg $1 $2; path_in=$2; shift 2 ;;
-        -path_out)        require_arg $1 $2; path_out=$2; shift 2 ;;
-        -remove)          require_arg $1 $2; words_remove=$2; shift 2 ;;
-        -remain)          require_arg $1 $2; words_remain=$2; shift 2 ;;
-        -keep)            require_arg $1 $2; words_keep=$2; shift 2 ;;
-        -path_aln)        require_arg $1 $2; path_aln=$2; shift 2 ;;
-        -resort)          resort=true; shift ;;
-        -rearrange)       rearrange=true; shift ;;
-        *)                pokaz_error "Unknown parameter: $1"; help_in_box; exit 1;;
+        -cores)           cores=$2;         shift 2 ;;
+        -path_project)    path_project=$2;  shift 2 ;;
+        -genomes_in)      genomes_in=$2;    shift 2 ;;
+        -genomes_out)     genomes_out=$2;   shift 2 ;;
+        -remove)          words_remove=$2;  shift 2 ;;
+        -remain)          words_remain=$2;  shift 2 ;;
+        -keep)            words_keep=$2;    shift 2 ;;
+        -rearrange)       rearrange=true;   shift ;;
+        *)                pokaz_error "Unknown parameter: $1"; help_in_box; exit 1 ;;
     esac
 done
 
-
-# Check required parameters
-if [[ -z "$path_in" ]]; then
-    pokaz_error "Error: -path_in is required"
-    help_in_box
-    exit 1
-fi
-path_in=$(add_symbol_if_missing "$path_in" "/")
-
-if [[ -z "$path_out" ]]; then
-    path_out="${path_in}filtered/"
-fi
-path_out=$(add_symbol_if_missing "$path_out" "/")
-mkdir -p "$path_out"
-
 # Determine mode
 mode_filter=false
-mode_reorder=false
 mode_rearrange=false
 
-# Filtering mode (before alignment)
-if [[ -n "$words_remove" || -n "$words_remain" ]]; then
-    mode_filter=true
-fi
-
-# Reordering mode (after alignment, reorder chromosomes)
-if [[ -n "$path_aln" && "$resort" == true && "$rearrange" == false ]]; then
-    mode_reorder=true
-fi
-
-# Rearrangement mode (after alignment, split/merge chromosomes)
-if [[ -n "$path_aln" && "$rearrange" == true && "$resort" == false ]]; then
+# Check: either path_project or genomes_in must be set, but not both
+if [[ -n "$path_project" && -n "$genomes_in" ]]; then
+    echo "Error: -path_project and -genomes_in cannot be used together" >&2
+    exit 1
+elif [[ -z "$path_project" && -z "$genomes_in" ]]; then
+    echo "Error: either -path_project or -genomes_in must be provided" >&2
+    exit 1
+elif [[ -n "$path_project" ]]; then
     mode_rearrange=true
+
+    path_project=$(add_symbol_if_missing "$path_project" "/")
+
+    if [[ -z "$rearrange" ]]; then
+        echo "Error: -rearrange must be set" >&2
+        exit 1
+    fi
+
+    if [[ -n "$words_remove" || -n "$words_remain" || -n "$words_keep" ]]; then
+        echo "Error: None of the following should be set: -words_remove, -words_remain, -words_keep" >&2
+        exit 1
+    fi
+
+elif [[ -n "$genomes_in" ]]; then
+    mode_filter=true
+
+    genomes_in=$(add_symbol_if_missing "$genomes_in" "/")
+
+    if [[ -z "$words_remove" && -z "$words_remain" && -z "$words_keep" ]]; then
+        echo "Error: At least one of the following must be set: -words_remove, -words_remain, -words_keep" >&2
+        exit 1
+    fi
+
+    if [[ -n "$rearrange" ]]; then
+        echo "Error: -rearrange should not be set" >&2
+        exit 1
+    fi
 fi
 
-# Check invalid combinations
-if [[ "$mode_filter" == true && ( "$mode_reorder" == true || "$mode_rearrange" == true ) ]]; then
-    pokaz_error "Error: Filtering mode (-remove/-remain) cannot be combined with reorder/rearrange modes."
-    help_in_box
-    exit 1
-fi
 
-if [[ "$mode_filter" == false && "$mode_reorder" == false && "$mode_rearrange" == false ]]; then
-    pokaz_error "Error: Specify parameters for one of the modes:
-    - Filtering:        -remove/-remain
-    - Reordering:       -path_aln -resort
-    - Rearrangement:    -path_aln -rearrange"
-    help_in_box
-    exit 1
-fi
+# Path with modified genomes
+genomes_out=$(add_symbol_if_missing "$genomes_out" "/")
+mkdir -p "$path_out"
+
 
 pokaz_message "Number of cores: ${cores}"
 
@@ -194,24 +178,6 @@ if [ "$mode_filter" = true ]; then
         ${param_words_remain} \
         ${param_words_keep}
 
-fi
-
-
-# -------------------------------------------------
-if [ "$mode_reorder" = true ]; then
-    pokaz_stage "Reordering chromosomes based on the preliminary alignment."
-
-    path_aln=$(add_symbol_if_missing "$path_aln" "/")
-    path_in=$(add_symbol_if_missing "$path_in" "/")
-    path_out=$(add_symbol_if_missing "$path_out" "/")
-
-    # Get the name of the reference genome
-    ref_name=$(basename "$path_aln")
-    ref_name=${ref_name#alignments_}
-
-    # Run reordering
-    Rscript $INSTALLED_PATH/chromotools/resort_01_find_best.R --path.aln ${path_aln} --ref ${ref_name} --path.resort ${path_out}
-    Rscript $INSTALLED_PATH/chromotools/resort_02_resort.R --path.genomes ${path_in} --ref ${ref_name} --path.resort ${path_out}
 fi
 
 
