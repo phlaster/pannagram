@@ -270,24 +270,24 @@ mkdir -p "$new_project" \
     "$path_plots_pairwise"
 
 # link_directory_contents "${old_project}/logs" "$path_log" 
-link_directory_contents "${old_project}/plots/plots_*" "$path_plots_pairwise"
+link_directory_contents "${old_project}/plots/plots_*" "$path_plots_pairwise" false "$link_or_copy"
 
-# link_directory_contents "${old_project}/intermediate/alignments_*" "$path_alignment"
-# link_directory_contents "${old_project}/intermediate/blast_gaps_*" "$path_blast_gaps"
-# link_directory_contents "${old_project}/intermediate/blast_parts_*" "$path_blast_parts"
-link_directory_contents "${old_project}/intermediate/chromosomes" "$path_chrom"
-# link_directory_contents "${old_project}/intermediate/parts" "$path_parts"
-# link_directory_contents "${old_project}/intermediate/mafft_*" "$path_mafft"
+# link_directory_contents "${old_project}/intermediate/alignments_*" "$path_alignment" false "$link_or_copy"
+# link_directory_contents "${old_project}/intermediate/blast_gaps_*" "$path_blast_gaps" false "$link_or_copy"
+# link_directory_contents "${old_project}/intermediate/blast_parts_*" "$path_blast_parts" false "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/chromosomes" "$path_chrom" false "$link_or_copy"
+# link_directory_contents "${old_project}/intermediate/parts" "$path_parts" false "$link_or_copy"
+# link_directory_contents "${old_project}/intermediate/mafft_*" "$path_mafft" false "$link_or_copy"
 
-link_directory_contents "${old_project}/intermediate/consensus/*.RData" "$path_inter_msa" true
-link_directory_contents "${old_project}/intermediate/consensus/*.rds" "$path_inter_msa" true
-link_directory_contents "${old_project}/intermediate/consensus/*.h5" "$path_features_msa" true
-link_directory_contents "${old_project}/intermediate/consensus/plot_svs" "$path_plots_sv"
-link_directory_contents "${old_project}/intermediate/consensus/plot_synteny" "$path_plots_synteny"
-link_directory_contents "${old_project}/intermediate/consensus/seq" "$path_seq"
-link_directory_contents "${old_project}/intermediate/consensus/snps" "$path_snp"
-link_directory_contents "${old_project}/intermediate/consensus/sv" "$path_sv"
+link_directory_contents "${old_project}/intermediate/consensus/*.RData" "$path_inter_msa" true "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/*.rds" "$path_inter_msa" true "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/*.h5" "$path_features_msa" true "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/plot_svs" "$path_plots_sv" false "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/plot_synteny" "$path_plots_synteny" false "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/seq" "$path_seq" false "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/snps" "$path_snp" false "$link_or_copy"
+link_directory_contents "${old_project}/intermediate/consensus/sv" "$path_sv" false "$link_or_copy"
 
-link_directory_contents "${old_project}/intermediate/*.txt" "$path_inter"
+link_directory_contents "${old_project}/intermediate/*.txt" "$path_inter" false "$link_or_copy"
 
 echo "Directory structure created at: $new_project"
