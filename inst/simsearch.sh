@@ -2,7 +2,8 @@
 
 INSTALLED_PATH=$(Rscript -e "cat(system.file(package = 'pannagram'))")
 
-echo $INSTALLED_PATH
+FASTA_NUCL_EXT=("fa" "fasta" "fas" "fna" "fn" "ffn")
+FASTA_PROT_EXT=("fa" "fasta" "fas" "faa" "mpfa")
 
 source "$INSTALLED_PATH/utils/chunk_error_control.sh"
 source "$INSTALLED_PATH/utils/utils_bash.sh"
@@ -13,16 +14,14 @@ source "$INSTALLED_PATH/utils/argparse_simsearch.sh"
 #            MAIN
 # ----------------------------------------------------------------------------
 
-# Fix the output file result
 output_pref=$(add_symbol_if_missing "$output_pref" "/")
-if [ ! -d "${output_pref}" ]; then
-    mkdir -p "${output_pref}"
-fi
-output_pref="${output_pref}simsearch"
 pokaz_message "Prefex for the output file was changed to ${output_pref}"
 
-# ---------------------------------------------
-# Files for the blast
+# Create intermediate directory
+intermediate_dir="${output_pref}.intermediate"
+mkdir -p "$intermediate_dir"
+pokaz_message "Intermediate files will be stored in $intermediate_dir"
+
 
 # Add all FASTA files from path_genome to db_files if path_genome is not empty
 if [ ! -z "$path_genome" ]; then
@@ -30,9 +29,7 @@ if [ ! -z "$path_genome" ]; then
     path_genome=$(add_symbol_if_missing "$path_genome" "/")
     db_files=()
 
-    fasta_extensions=("fa" "fasta" "fna" "fas" "ffn" "frn")
-
-    for ext in "${fasta_extensions[@]}"; do
+    for ext in "${FASTA_NUCL_EXT[@]}"; do
         for genome_file in "$path_genome"/*.$ext; do
             if [ -e "$genome_file" ]; then
                 db_file=$(basename "$genome_file")
@@ -40,7 +37,6 @@ if [ ! -z "$path_genome" ]; then
             fi
         done
     done
-
 fi
 
 # Add file_seq to db_files if it's not empty
@@ -59,31 +55,28 @@ fi
 # Run the pipeline
 
 for db_file in "${db_files[@]}"; do
-
     db_pref=$(basename "$db_file")
     db_pref=${db_pref%%.*}
-    file_out_cnt="${output_pref}.${db_pref}_${sim_threshold}_${coverage}.cnt"
-    echo "File with counts ${file_out_cnt}"
+    file_out_cnt="${output_pref}${db_pref}_${sim_threshold}_${coverage}.cnt"
+    pokaz_message "File with counts ${file_out_cnt}"
     if [ -f "$file_out_cnt" ]; then
-       echo "Counts for ${db_name} estimated."
+       pokaz_message "Counts for ${db_name} estimated."
        continue
     fi
 
     # ---------------------------------------------
     # Check if the BLAST database exists for the current file
     db_file_full="${path_genome}${db_file}"
-    echo "Database ${db_file_full}"
-    if [ ! -f "${db_file_full}.nhr" ]; then
-        pokaz_stage "Creating database for $db_file..."
-        makeblastdb -in "$db_file_full" -dbtype nucl > /dev/null
+    db_name="${db_pref}"  # Use consistent name
+    
+    # Create DB in intermediate_dir
+    db_path_intermediate="${intermediate_dir}/${db_name}"
+    if [ ! -f "${db_path_intermediate}.phr" ] && [ ! -f "${db_path_intermediate}.nhr" ]; then
+        pokaz_stage "Creating database for $db_file in intermediate directory..."
+        makeblastdb -in "$db_file_full" -dbtype "$dbtype" -out "$db_path_intermediate" > /dev/null
     fi
 
-    # ---------------------------------------------
-    # Run BLAST
-    # Define the temporary file for storing BLAST results
-    db_name=$(basename -- "$db_file")
-    db_name="${db_name%.*}"
-    blast_res="${output_pref}.${db_name}.blast.tmp"
+    blast_res="${intermediate_dir}/${db_name}.blast.tmp"
 
     # Check if BLAST results should be used from an existing file
     if [ "$after_blast_flag" -eq 1 ]; then
@@ -94,12 +87,28 @@ for db_file in "${db_files[@]}"; do
     else
         # Perform BLAST search
         pokaz_stage "BLAST search in $db_file..."
-        blastn \
-            -db "$db_file_full" \
-            -query "$file_input" \
-            -out "$blast_res" \
-            -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
-            -perc_identity "$((sim_threshold - 1))"
+        if [ "$use_aa" -eq 1 ]; then
+            blast_res_pre="${blast_res}.pre"
+
+            $blast_cmd \
+                -db "$db_path_intermediate" \
+                -query "$file_input" \
+                -out "$blast_res_pre" \
+                -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
+                -num_threads "$cores"
+            
+            Rscript "$INSTALLED_PATH/sim/sim_modify_blast_results.R" \
+                --file.init "$blast_res_pre" \
+                --file.mod "$blast_res"
+        else
+            $blast_cmd \
+                -db "$db_path_intermediate" \
+                -query "$file_input" \
+                -out "$blast_res" \
+                -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
+                -perc_identity "$((sim_threshold - 1))" \
+                -num_threads "$cores"
+        fi
     fi
 
     # Check if the BLAST results file is empty
@@ -118,7 +127,7 @@ for db_file in "${db_files[@]}"; do
         Rscript "$INSTALLED_PATH/sim/sim_in_seqs.R" \
             --in_file "$file_input" \
             --res "$blast_res" \
-            --out "${output_pref}.${db_name}.rds" \
+            --out "${output_pref}${db_name}.rds" \
             --sim "$sim_threshold" \
             --use_strand "$use_strand" \
             --db_file "$db_file_full" \
@@ -128,14 +137,15 @@ for db_file in "${db_files[@]}"; do
         Rscript "$INSTALLED_PATH/sim/sim_in_genome.R" \
             --in_file "$file_input" \
             --res "$blast_res" \
-            --out "${output_pref}.${db_name}" \
+            --out "${output_pref}${db_name}" \
             --sim "$sim_threshold" \
             --coverage "$coverage"
     fi
 
     # Remove the BLAST temporary file if not needed
     if [ "$keep_blast_flag" -ne 1 ] && [ "$after_blast_flag" -ne 1 ]; then
-        rm "$blast_res"
+        rm -f "$blast_res"
+        rm -f "$blast_res_pre"
     fi
 
 done
@@ -143,7 +153,7 @@ done
 # Combine all files to the total count file
 if [[ -z "$file_seq" && -z "$file_genome" ]]; then
     Rscript "$INSTALLED_PATH/sim/sim_in_genome_combine.R" \
-        --out "$output_pref" \
+        --out_dir "$output_pref" \
         --sim "$sim_threshold" \
         --coverage "$coverage"
 fi
