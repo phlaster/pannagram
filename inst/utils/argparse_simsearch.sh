@@ -161,19 +161,19 @@ if [ -n "$path_genome" ]; then
         exit 1
     fi
 
-    valid_file_found=false
-    for genome_file in "$path_genome"/*; do
-        if [ -f "$genome_file" ]; then
-            if validate_fasta_suffix "$genome_file" "FASTA with nucleotide sequences"; then
-                valid_found=true
-            fi
-        fi
-    done
+    # valid_file_found=false
+    # for genome_file in "$path_genome"/*; do
+    #     if [ -f "$genome_file" ]; then
+    #         if validate_fasta_suffix "$genome_file" "FASTA with nucleotide sequences"; then
+    #             valid_found=true
+    #         fi
+    #     fi
+    # done
 
-    if ! $valid_found; then
-        echo "Error: No valid FASTA files found in $path_genome"
-        exit 1
-    fi
+    # if ! $valid_found; then
+    #     echo "Error: No valid FASTA files found in $path_genome"
+    #     exit 1
+    # fi
 fi
 
 # Check if similarity threshold parameter is provided
