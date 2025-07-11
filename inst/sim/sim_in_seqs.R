@@ -52,7 +52,7 @@ coverage <- ifelse(is.null(opt$coverage), sim.cutoff, opt$coverage/100)
 
 # ---- Main ----
 
-# pokaz(blast.file)
+pokaz(blast.file)
 
 v = read.table(blast.file, stringsAsFactors = F)
 v = v[v$V6 >= sim.cutoff * 100,]
@@ -91,10 +91,24 @@ res$len8 = db.len[res$V8]
 res$p1 = res$C1 / res$len1
 res$p8 = res$C8 / res$len8
 
-res$cover = ((res$p1 >= sim.cutoff) | (res$p8 >= sim.cutoff)) * 1
-pokaz('Number of pairs after the sumilarity cutoff', sum(res$cover == 0))
+# res$cover = ((res$p1 >= sim.cutoff) | (res$p8 >= sim.cutoff)) * 1
+# pokaz('Number of pairs after the sumilarity cutoff', sum(res$cover == 0))
+
+# Change the order of columns
+res <- res[,c('V1', 'V8', 'dir', 'len1', 'len8', 'C1', 'C8', 'p1', 'p8')]
 
 saveRDS(res, output.file)
+
+# Save the txt-file with proper column names
+colnames(res) <- c('name.q', 'name.t', 'strand', 'len.q', 'len.t', 'coverage.q', 'coverage.t', 'percent.q', 'percent.t')
+
+output.file.txt = sub('.rds', '.txt', output.file)
+pokaz(output.file.txt)
+write.table(res,
+            output.file.txt,
+            sep       = "\t",
+            quote     = FALSE,
+            row.names = F)
 
 
 # # Sort V4 and V5 positions

@@ -30,7 +30,9 @@ if [ ! -z "$path_genome" ]; then
     db_files=()
 
     for ext in "${FASTA_NUCL_EXT[@]}"; do
+        echo "Ext ${ext}"
         for genome_file in "$path_genome"/*.$ext; do
+            echo "File ${genome_file}"
             if [ -e "$genome_file" ]; then
                 db_file=$(basename "$genome_file")
                 db_files+=("$db_file")
