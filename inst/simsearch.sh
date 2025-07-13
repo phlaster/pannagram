@@ -2,8 +2,7 @@
 
 INSTALLED_PATH=$(Rscript -e "cat(system.file(package = 'pannagram'))")
 
-FASTA_NUCL_EXT=("fa" "fasta" "fas" "fna" "fn" "ffn")
-FASTA_PROT_EXT=("fa" "fasta" "fas" "faa" "mpfa")
+FASTA_SUFFIX=("fa" "fasta" "fas" "fna" "fn" "ffn" "faa")
 
 source "$INSTALLED_PATH/utils/chunk_error_control.sh"
 source "$INSTALLED_PATH/utils/utils_bash.sh"
@@ -29,7 +28,7 @@ if [ ! -z "$path_genome" ]; then
     path_genome=$(add_symbol_if_missing "$path_genome" "/")
     db_files=()
 
-    for ext in "${FASTA_NUCL_EXT[@]}"; do
+    for ext in "${FASTA_SUFFIX[@]}"; do
         for genome_file in "$path_genome"/*.$ext; do
             if [ -e "$genome_file" ]; then
                 db_file=$(basename "$genome_file")

@@ -2,7 +2,7 @@
 #            PARAMETERS
 # ----------------------------------------------------------------------------
 
-# Function to check if a file has a specific extension
+# Function to check if a file has a valid FASTA extension
 has_extension() {
     local filename="$1"
     shift
@@ -15,26 +15,6 @@ has_extension() {
         fi
     done
     return 1
-}
-
-validate_fasta_suffix() {
-    local file="$1"
-    local expected_type="$2"
-
-    if [ ! -f "$file" ]; then
-        pokaz_error "Error: FASTA file not found: $file"
-        return 1
-    fi
-
-    if [[ "$expected_type" == "FASTA with protein sequences" ]] && ! has_extension "$file" "${FASTA_PROT_EXT[@]}"; then
-        pokaz_error "Error: $expected_type was expected for '$file'. Acceptable suffixes are: ${FASTA_PROT_EXT[*]}"
-        return 1
-    elif [[ "$expected_type" == "FASTA with nucleotide sequences" ]] && ! has_extension "$file" "${FASTA_NUCL_EXT[@]}"; then
-        pokaz_error "Error: $expected_type was expected for '$file'. Acceptable suffixes are: ${FASTA_NUCL_EXT[*]}"
-        return 1
-    fi
-
-    return 0
 }
 
 if [ $# -eq 0 ]; then
@@ -129,27 +109,32 @@ fi
 
 # Validate -in_seq
 if [ -n "$file_input" ]; then
-    if [ "$use_aa" -eq 1 ]; then
-        expected_type="FASTA with protein sequences"
-    else
-        expected_type="FASTA with nucleotide sequences"
-    fi
-
-    if ! validate_fasta_suffix "$file_input" "$expected_type"; then
+    if ! has_extension "$file_input" "${FASTA_SUFFIX[@]}"; then
+        pokaz_error "Error: Invalid FASTA file: '$file_input'. Acceptable suffixes are: ${FASTA_SUFFIX[*]}"
         exit 1
     fi
 fi
 
 # Validate -on_seq if set
 if [ -n "$file_seq" ]; then
-    if ! validate_fasta_suffix "$file_seq" "FASTA with nucleotide sequences"; then
+    if [ ! -f "$file_seq" ]; then
+        pokaz_error "Error: File not found: $file_seq"
+        exit 1
+    fi
+    if ! has_extension "$file_seq" "${FASTA_SUFFIX[@]}"; then
+        pokaz_error "Error: Invalid FASTA file: '$file_seq'. Acceptable suffixes are: ${FASTA_SUFFIX[*]}"
         exit 1
     fi
 fi
 
 # Validate -on_genome if set
 if [ -n "$file_genome" ]; then
-    if ! validate_fasta_suffix "$file_genome" "FASTA with nucleotide sequences"; then
+    if [ ! -f "$file_genome" ]; then
+        pokaz_error "Error: File not found: $file_genome"
+        exit 1
+    fi
+    if ! has_extension "$file_genome" "${FASTA_SUFFIX[@]}"; then
+        pokaz_error "Error: Invalid FASTA file: '$file_genome'. Acceptable suffixes are: ${FASTA_SUFFIX[*]}"
         exit 1
     fi
 fi
@@ -161,19 +146,18 @@ if [ -n "$path_genome" ]; then
         exit 1
     fi
 
-    # valid_file_found=false
-    # for genome_file in "$path_genome"/*; do
-    #     if [ -f "$genome_file" ]; then
-    #         if validate_fasta_suffix "$genome_file" "FASTA with nucleotide sequences"; then
-    #             valid_found=true
-    #         fi
-    #     fi
-    # done
+    found_fasta=0
+    for genome_file in "$path_genome"/*; do
+        if [ -f "$genome_file" ] && has_extension "$genome_file" "${FASTA_SUFFIX[@]}"; then
+            found_fasta=1
+            break
+        fi
+    done
 
-    # if ! $valid_found; then
-    #     echo "Error: No valid FASTA files found in $path_genome"
-    #     exit 1
-    # fi
+    if [ "$found_fasta" -eq 0 ]; then
+        pokaz_error "Error: No FASTA files found in directory: $path_genome"
+        exit 1
+    fi
 fi
 
 # Check if similarity threshold parameter is provided
