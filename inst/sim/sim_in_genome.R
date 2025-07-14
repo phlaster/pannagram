@@ -82,20 +82,23 @@ if(nrow(res) == 0){
   quit(save = "no")
 }
 
+save(list = ls(), file = "tmp_workspace_good.RData")
+
 blastres2gff(res, paste0(output.file, '.gff'))
 
-colnames(res) <- c('query', 'beg.q', 'eng.q', 'beg.g', 'end.g', 'sim', 'coverage.q', 'genome.chr', 'coverage.g', 'strand')
+colnames(res) <- c('sequence', 'beg.s', 'end.s', 'beg.g', 'end.g', 'similarity', 'coverage.s', 'genome.chr', 'coverage.g', 'strand')
+res = res[, c('sequence', 'beg.s', 'end.s', 'beg.g', 'end.g', 'strand', 'genome.chr', 'similarity', 'coverage.s', 'coverage.g')]
 res = res[order(res$genome.chr),]
-res = res[order(res$query),]
+res = res[order(res$sequence),]
 write.table(res, paste0(output.file, '.table'), quote = F, row.names = F, col.names = T, sep = '\t')
 
 # Copy-number information
-res.cnt =as.data.frame.matrix(table(res$query, res$genome.chr))
+res.cnt = as.data.frame.matrix(table(res$sequence, res$genome.chr))
 res.cnt$total = rowSums(res.cnt)
 res.cnt = res.cnt[order(-res.cnt$total),]
-write.table(res.cnt, paste0(output.file, '.cnt'), quote = F, row.names = T, col.names = T, sep = '\t')
+write.table(res.cnt, paste0(output.file, '.cnt'), quote = F, row.names = T, col.names = NA, sep = '\t')
 
-cnt = tapply(res[,8], res[,1], length)
+cnt = tapply(res$genome.chr, res$sequence, length)
 pokaz('Mean, min, max number of hits per sequence:', mean(cnt),  min(cnt),  max(cnt))
 pokaz('Number of hits found:', nrow(res))
 
