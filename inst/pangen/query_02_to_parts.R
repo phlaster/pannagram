@@ -98,6 +98,10 @@ if(n.chr == 0){
   combinations <- expand.grid(acc = accessions, i.chr = 1:n.chr)  
 }
 
+
+combinations = combinations[nrow(combinations):1,]
+pokaz(combinations)
+
 # ***********************************************************************
 # ---- MAIN program body ----
 loop.function <- function(i.comb, 
