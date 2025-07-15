@@ -557,10 +557,6 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 
 # Split reference fasta into chromosomes if additionally needed
-echo ${path_in}
-echo $path_ref
-echo "Num ref ${nchr_ref}"
-echo "Num ref ${nchr}"
 if [[ "${path_in}" != "$path_ref" || "$nchr_ref" != "$nchr" ]]; then
 
     ((step_num = step_num - 1))
