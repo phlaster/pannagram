@@ -41,8 +41,6 @@ use.strand <- ifelse(!is.null(opt$use_strand), as.logical(opt$use_strand),
 coverage <- ifelse(!is.null(opt$coverage), opt$coverage, 
                    stop("Similarity threshold not specified", call. = FALSE))
 
-pokaz(sim.cutoff, coverage)
-
 # ---- Main ----
 
 v = readBlast(blast.file)
@@ -82,7 +80,7 @@ saveRDS(res, output.file)
 
 # Save the txt-file with proper column names
 res <- res[,c('V1', 'V8', 'dir', 'len1', 'len8', 'p1', 'p8')]
-colnames(res) <- c('name.q', 'name.t', 'strand', 'len.q', 'len.t', 'coverage.q', 'coverage.t')
+colnames(res) <- c('name.query', 'name.target', 'strand', 'length.query', 'length.target', 'coverage.query', 'coverage.target')
 
 # output.file.txt = sub('.rds', '.txt', output.file)
 # pokaz(output.file.txt)
@@ -96,8 +94,7 @@ colnames(res) <- c('name.q', 'name.t', 'strand', 'len.q', 'len.t', 'coverage.q',
 # Incorporate coverage
 res = res[(res$coverage.q > coverage / 100) | (res$coverage.t > coverage / 100),]
 
-output.file.txt = sub('.rds', paste0('_cov_', coverage, '.txt'), output.file)
-pokaz(output.file.txt)
+output.file.txt = sub('.rds', paste0( '_',sim.cutoff, '_', coverage, '.txt'), output.file)
 write.table(res,
             output.file.txt,
             sep       = "\t",
