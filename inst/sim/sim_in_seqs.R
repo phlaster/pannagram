@@ -45,7 +45,7 @@ pokaz(sim.cutoff, coverage)
 
 # ---- Main ----
 
-v = read.table(blast.file, stringsAsFactors = F)
+v = readBlast(blast.file)
 v = v[v$V6 >= sim.cutoff,]
 v = v[v$V1 != v$V8,]
 
@@ -84,13 +84,13 @@ saveRDS(res, output.file)
 res <- res[,c('V1', 'V8', 'dir', 'len1', 'len8', 'p1', 'p8')]
 colnames(res) <- c('name.q', 'name.t', 'strand', 'len.q', 'len.t', 'coverage.q', 'coverage.t')
 
-output.file.txt = sub('.rds', '.txt', output.file)
-pokaz(output.file.txt)
-write.table(res,
-            output.file.txt,
-            sep       = "\t",
-            quote     = FALSE,
-            row.names = F)
+# output.file.txt = sub('.rds', '.txt', output.file)
+# pokaz(output.file.txt)
+# write.table(res,
+#             output.file.txt,
+#             sep       = "\t",
+#             quote     = FALSE,
+#             row.names = F)
 
 
 # Incorporate coverage

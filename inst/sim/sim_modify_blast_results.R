@@ -30,12 +30,8 @@ if (!file.exists(file.init)) {
   stop("Error: --file.init does not exist.")
 }
 
-if (file.exists(file.mod)) {
-  stop("Error: --file.mod already exists. Please provide a new file path.")
-}
-
 # Print paths for confirmation
-res = read.table(file.init, stringsAsFactors = F)
+res = readBlast(file.init)
 
 # Modify:
 # V2 = query start

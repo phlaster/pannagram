@@ -1482,7 +1482,7 @@ wndSum <- function(d, wnd.len, echo=T){
 #' @export
 readBlast <- function(file) {
   if (any(grepl("^[^#]", readLines(file)))) {
-    return(read.table(file, stringsAsFactors = F,  header = F))
+    return(read.table(file, stringsAsFactors = F,  header = F, comment.char = ""))
   } else {
     return(NULL)
   }

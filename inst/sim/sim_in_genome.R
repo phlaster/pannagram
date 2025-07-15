@@ -49,22 +49,12 @@ coverage <- ifelse(is.null(opt$coverage), sim.cutoff, opt$coverage/100)
 # Rename the output file
 output.file = paste(output.file, round(sim.cutoff * 100), round(coverage * 100), sep = '_')
 
-
-v = read.table(blast.file, stringsAsFactors = F)
+v = readBlast(blast.file)
 v = v[v$V6 >= sim.cutoff * 100,]
 
-# seqs = readFastaMy(fasta.file)
-# v$len1 = nchar(seqs)[v$V1]
-# rm(seqs)
 len1 = v$V9
 v = v[,1:8,drop=F]
 v$len1 = len1
-
-# ---- for testing ----
-# file.ws = "tmp_workspace.RData"
-# all.local.objects <- ls()
-# save(list = all.local.objects, file = file.ws)
-# stop('Enough..')
 
 # ---- Similarity analysis ----
 res = findHitsInRef(v, sim.cutoff = sim.cutoff, coverage=coverage, echo = F)

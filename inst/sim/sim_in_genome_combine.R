@@ -50,7 +50,7 @@ total.cnt.names = c()
 
 for (i.file in 1:length(files)) {
   file = files[i.file]
-  data <- read.table(file, header = TRUE, stringsAsFactors = F)
+  data <- read.table(file, header = TRUE, stringsAsFactors = F, comment.char = "")
   total.cnt.list[[i.file]] = data[,ncol(data), drop=F]
   total.cnt.names = unique(c(total.cnt.names, rownames(data)))
 }
