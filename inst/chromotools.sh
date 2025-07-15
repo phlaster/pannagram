@@ -109,7 +109,7 @@ elif [[ -n "$path_project" ]]; then
 
     path_project=$(add_symbol_if_missing "$path_project" "/")
 
-    if [[ -z "$rearrange" ]]; then
+    if [ "$rearrange" = false ]; then
         echo "Error: -rearrange must be set" >&2
         exit 1
     fi
@@ -129,7 +129,7 @@ elif [[ -n "$genomes_in" ]]; then
         exit 1
     fi
 
-    if [[ -n "$rearrange" ]]; then
+    if [ "$rearrange" = true ]; then
         echo "Error: -rearrange should not be set" >&2
         exit 1
     fi
