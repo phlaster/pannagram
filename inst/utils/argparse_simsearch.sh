@@ -38,19 +38,19 @@ cores=1
 # Read arguments
 while [ "$1" != "" ]; do
     case $1 in
-        -h | --help ) show_help; exit ;;
-        -in_seq )    file_input=$2; shift 2 ;;
-        -out )       output_pref=$2; shift 2 ;;
-        -sim )       sim_threshold=$2; shift 2 ;;
-        -cov )       coverage=$2; shift 2 ;;
+        -h | --help )         show_help; exit ;;
+        -in_seq )             file_input=$2;    shift 2 ;;
+        -out )                output_pref=$2;   shift 2 ;;
+        -sim | -similarity )  sim_threshold=$2; shift 2 ;;
+        -cov | -coverage )    coverage=$2;      shift 2 ;;
 
-        -on_seq )    file_seq=$2; shift 2 ;;
+        -on_seq )    file_seq=$2;    shift 2 ;;
         -on_genome ) file_genome=$2; shift 2 ;;
         -on_path )   path_genome=$2; shift 2 ;;
 
         -afterblast ) after_blast_flag=1; shift ;;
-        -keepblast )  keep_blast_flag=1; shift ;;
-        -aa )         use_aa=1; shift ;;
+        -keepblast )  keep_blast_flag=1;  shift ;;
+        -aa )         use_aa=1;           shift ;;
 
         -strandfree ) use_strand=F; shift ;;
 

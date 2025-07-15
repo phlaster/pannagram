@@ -71,15 +71,18 @@ gff2gff <- function(path.proj,
                     n.chr,
                     ref.acc='',
                     exact.match=T, 
-                    gr.accs.e = "accs/",
                     aln.type = 'msa_',  # please provide correct prefix. For example, in case of reference-based, it's 'comb_'
                     echo=FALSE,
                     pangenome.name='Pangen',
                     s.chr = '_Chr', # in this case the pattern is "*_ChrX", where X is the number
                     remain=F
                     ){
+  
   path.cons <- file.path(path.proj, "features", "msa/")
-
+  
+  # Variables
+  gr.accs.e = "accs/"
+  
   # Set of names of accettions, which can be used to specify pangenomes coordinates
   pangenome.names = unique(c(pangenome.name, 'Pangen', 'Pangenome', 'Pannagram'))
   colnames.full1 = colnames(gff1)
@@ -290,6 +293,7 @@ bed2bed <- function(path.cons,
 }
 
 
+#' @export
 pos2pos <- function(path.cons, 
                     acc1, acc2,
                     pos1, 

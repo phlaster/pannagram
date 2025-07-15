@@ -49,31 +49,18 @@ coverage <- ifelse(is.null(opt$coverage), sim.cutoff, opt$coverage/100)
 # Rename the output file
 output.file = paste(output.file, round(sim.cutoff * 100), round(coverage * 100), sep = '_')
 
-
-v = read.table(blast.file, stringsAsFactors = F)
+v = readBlast(blast.file)
 v = v[v$V6 >= sim.cutoff * 100,]
 
-# seqs = readFastaMy(fasta.file)
-# v$len1 = nchar(seqs)[v$V1]
-# rm(seqs)
 len1 = v$V9
 v = v[,1:8,drop=F]
 v$len1 = len1
-
-# ---- for testing ----
-# file.ws = "tmp_workspace.RData"
-# all.local.objects <- ls()
-# save(list = all.local.objects, file = file.ws)
-# stop('Enough..')
 
 # ---- Similarity analysis ----
 res = findHitsInRef(v, sim.cutoff = sim.cutoff, coverage=coverage, echo = F)
 
 # Sort V4 and V5 positions
 idx.tmp = res$V4 > res$V5
-# print(sum(idx.tmp))
-# print(sum(res$strand == '-'))
-
 tmp = res$V4[idx.tmp]
 res$V4[idx.tmp] = res$V5[idx.tmp]
 res$V5[idx.tmp] = tmp
@@ -84,18 +71,24 @@ if(nrow(res) == 0){
 
 blastres2gff(res, paste0(output.file, '.gff'))
 
-colnames(res) <- c('query', 'beg.q', 'eng.q', 'beg.g', 'end.g', 'sim', 'coverage.q', 'genome.chr', 'coverage.g', 'strand')
+colnames(res) <- c('sequence', 'beg.seq', 'end.seq', 'beg.genome', 'end.genome', 'similarity', 'coverage', 'genome.chr', 'len.seq', 'strand')
+res = res[, c('sequence', 'beg.seq', 'end.seq', 'beg.genome', 'end.genome', 'strand', 'genome.chr', 'similarity', 'coverage', 'len.seq')]
+res$coverage = res$coverage / res$len.seq * 100
+
+res$similarity = round(res$similarity, 1)
+res$coverage = round(res$coverage, 1)
+
 res = res[order(res$genome.chr),]
-res = res[order(res$query),]
+res = res[order(res$sequence),]
 write.table(res, paste0(output.file, '.table'), quote = F, row.names = F, col.names = T, sep = '\t')
 
 # Copy-number information
-res.cnt =as.data.frame.matrix(table(res$query, res$genome.chr))
+res.cnt = as.data.frame.matrix(table(res$sequence, res$genome.chr))
 res.cnt$total = rowSums(res.cnt)
 res.cnt = res.cnt[order(-res.cnt$total),]
-write.table(res.cnt, paste0(output.file, '.cnt'), quote = F, row.names = T, col.names = T, sep = '\t')
+write.table(res.cnt, paste0(output.file, '.cnt'), quote = F, row.names = T, col.names = NA, sep = '\t')
 
-cnt = tapply(res[,8], res[,1], length)
+cnt = tapply(res$genome.chr, res$sequence, length)
 pokaz('Mean, min, max number of hits per sequence:', mean(cnt),  min(cnt),  max(cnt))
 pokaz('Number of hits found:', nrow(res))
 

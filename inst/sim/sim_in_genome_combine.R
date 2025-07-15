@@ -39,17 +39,18 @@ coverage <- ifelse(is.null(opt$coverage), sim.cutoff, opt$coverage)
 # ---- Main ----
 
 files <- list.files(path = output.dir, pattern = paste0(".*",sim.cutoff,'_', coverage,"\\.cnt$"), full.names = T)
-if(length(files) == 0) stop('No files with results')
+if(length(files) == 0){
+  pokazAttention('Query sequences were not found in the genomes; therefore, a copy number table cannot be generated.')
+  quit(save = "no", status = 0)
+} 
 # print(files)
-
-coverage = coverage / 100
 
 total.cnt.list = list()
 total.cnt.names = c()
 
 for (i.file in 1:length(files)) {
   file = files[i.file]
-  data <- read.table(file, header = TRUE, stringsAsFactors = F)
+  data <- read.table(file, header = TRUE, stringsAsFactors = F, comment.char = "")
   total.cnt.list[[i.file]] = data[,ncol(data), drop=F]
   total.cnt.names = unique(c(total.cnt.names, rownames(data)))
 }
@@ -63,7 +64,6 @@ for (i.file in 1:length(files)) {
 
 
 # Colnames
-
 acc.names <- sapply(basename(files), function(s){
   s = strsplit(s, '\\.')[[1]]
   return(s[length(s) - 1])
