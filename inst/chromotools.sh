@@ -138,7 +138,7 @@ fi
 
 # Path with modified genomes
 genomes_out=$(add_symbol_if_missing "$genomes_out" "/")
-mkdir -p "$path_out"
+mkdir -p "$genomes_out"
 
 
 pokaz_message "Number of cores: ${cores}"
@@ -150,9 +150,6 @@ pokaz_message "Number of cores: ${cores}"
 # -------------------------------------------------
 if [ "$mode_filter" = true ]; then
     pokaz_stage "Filtering chromosomes by keywords."
-
-    path_plots="${path_consensus}plot_synteny/"
-    mkdir -p ${path_plots}
 
     param_words_remove=""
     param_words_remain=""
@@ -171,8 +168,8 @@ if [ "$mode_filter" = true ]; then
     fi
 
     Rscript $INSTALLED_PATH/chromotools/filter_01.R \
-        --path.genomes ${path_in} \
-        --path.filtered ${path_out} \
+        --path.genomes ${genomes_in} \
+        --path.filtered ${genomes_out} \
         --cores ${cores} \
         ${param_words_remove} \
         ${param_words_remain} \
@@ -180,24 +177,40 @@ if [ "$mode_filter" = true ]; then
 
 fi
 
-
 # -------------------------------------------------
 if [ "$mode_rearrange" = true ]; then
 
-    pokaz_stage "Find the best rearrangements based on alignment..."
+    # Path with alignments
+    shopt -s nullglob
+    matches=("${path_project}.intermediate"/alignments_*)
+    shopt -u nullglob
 
+    # Handle number of matches
+    case ${#matches[@]} in
+      1) path_aln="${matches[0]}" ;;
+      0) echo "Error: No matching paths found." >&2; exit 1 ;;
+      *) echo "Error: Multiple matching paths found:" >&2; printf ' - %s\n' "${matches[@]}" >&2; exit 1 ;;
+    esac
+
+    # Path with chromosomes
+    path_chr="${path_project}.intermediate/chromosomes"
+
+
+    # Fix folders
     path_aln=$(add_symbol_if_missing "$path_aln" "/")
-    path_in=$(add_symbol_if_missing "$path_in" "/")
-    path_out=$(add_symbol_if_missing "$path_out" "/")
+    path_chr=$(add_symbol_if_missing "$path_chr" "/")
 
     # Get the name of the reference genome
     ref_name=$(basename "$path_aln")
     ref_name=${ref_name#alignments_}
 
-    Rscript $INSTALLED_PATH/chromotools/rearrange_01_positions.R --path.aln ${path_aln} --ref ${ref_name} --path.processed ${path_out} --path.chr ${path_in}
+    pokaz_stage "Find the best rearrangements based on alignment..."
+    Rscript $INSTALLED_PATH/chromotools/rearrange_01_positions.R --path.aln ${path_aln} --ref ${ref_name} \
+                                                                 --path.processed ${genomes_out} --path.chr ${path_chr}
 
     pokaz_stage "Rearranging (splitting/merging) chromosomes..."
-    Rscript $INSTALLED_PATH/chromotools/rearrange_02_genomes.R --path.aln ${path_aln} --ref ${ref_name} --path.processed ${path_out} --path.chr ${path_in}
+    Rscript $INSTALLED_PATH/chromotools/rearrange_02_genomes.R --path.aln ${path_aln} --ref ${ref_name} \
+                                                               --path.processed ${genomes_out} --path.chr ${path_chr}
 fi
 
 pokaz_message "Script completed successfully!"
