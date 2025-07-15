@@ -96,6 +96,9 @@ for db_file in "${db_files[@]}"; do
                 -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen" \
                 -num_threads "$cores"
             
+            # Remove previous file with aa reults
+            rm -f "$blast_res"
+
             Rscript "$INSTALLED_PATH/sim/sim_modify_blast_results.R" \
                 --file.init "$blast_res_pre" \
                 --file.mod "$blast_res"

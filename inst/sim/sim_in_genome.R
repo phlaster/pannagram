@@ -71,9 +71,6 @@ res = findHitsInRef(v, sim.cutoff = sim.cutoff, coverage=coverage, echo = F)
 
 # Sort V4 and V5 positions
 idx.tmp = res$V4 > res$V5
-# print(sum(idx.tmp))
-# print(sum(res$strand == '-'))
-
 tmp = res$V4[idx.tmp]
 res$V4[idx.tmp] = res$V5[idx.tmp]
 res$V5[idx.tmp] = tmp
@@ -82,12 +79,15 @@ if(nrow(res) == 0){
   quit(save = "no")
 }
 
-save(list = ls(), file = "tmp_workspace_good.RData")
-
 blastres2gff(res, paste0(output.file, '.gff'))
 
-colnames(res) <- c('sequence', 'beg.s', 'end.s', 'beg.g', 'end.g', 'similarity', 'coverage.s', 'genome.chr', 'coverage.g', 'strand')
-res = res[, c('sequence', 'beg.s', 'end.s', 'beg.g', 'end.g', 'strand', 'genome.chr', 'similarity', 'coverage.s', 'coverage.g')]
+colnames(res) <- c('sequence', 'beg.seq', 'end.seq', 'beg.genome', 'end.genome', 'similarity', 'coverage', 'genome.chr', 'len.seq', 'strand')
+res = res[, c('sequence', 'beg.seq', 'end.seq', 'beg.genome', 'end.genome', 'strand', 'genome.chr', 'similarity', 'coverage', 'len.seq')]
+res$coverage = res$coverage / res$len.seq * 100
+
+res$similarity = round(res$similarity, 1)
+res$coverage = round(res$coverage, 1)
+
 res = res[order(res$genome.chr),]
 res = res[order(res$sequence),]
 write.table(res, paste0(output.file, '.table'), quote = F, row.names = F, col.names = T, sep = '\t')

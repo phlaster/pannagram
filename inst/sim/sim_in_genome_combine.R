@@ -45,8 +45,6 @@ if(length(files) == 0){
 } 
 # print(files)
 
-coverage = coverage / 100
-
 total.cnt.list = list()
 total.cnt.names = c()
 
@@ -66,7 +64,6 @@ for (i.file in 1:length(files)) {
 
 
 # Colnames
-
 acc.names <- sapply(basename(files), function(s){
   s = strsplit(s, '\\.')[[1]]
   return(s[length(s) - 1])

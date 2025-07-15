@@ -94,7 +94,7 @@ write.table(res,
 
 
 # Incorporate coverage
-res = res[(res$percent.q > coverage / 100) | (res$percent.t > coverage / 100),]
+res = res[(res$coverage.q > coverage / 100) | (res$coverage.t > coverage / 100),]
 
 output.file.txt = sub('.rds', paste0('_cov_', coverage, '.txt'), output.file)
 pokaz(output.file.txt)

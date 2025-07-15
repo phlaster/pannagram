@@ -65,7 +65,7 @@ PARAMETERS EXPLAINED:
         -ref REF_NAME               Name of the reference genome: REF_NAME.fasta;
                                     Names should NOT contain '_chr' as a substring;
         -nchr_ref N_CHR_REF         Number of chromosomes in the reference genome;
-        -nchr_acc N_CHR_QUERY       Number of chromosomes in the query genome;
+        -nchr     N_CHR_QUERY       Number of chromosomes in the query genome;
 
     * Optional parameters for MSA:
         -refs REFS_NAMES            Names of reference genomes for randomisation;
