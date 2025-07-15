@@ -193,7 +193,7 @@ if [ "$mode_rearrange" = true ]; then
     esac
 
     # Path with chromosomes
-    path_chr="${path_project}.intermediate/chromosomes"
+    path_chr="${path_project}.intermediate/chromosomes/"
 
 
     # Fix folders
