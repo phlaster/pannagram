@@ -1,0 +1,1 @@
+^((?!^(DESCRIPTION|NAMESPACE|inst|R|man)(/|$)).)*$
