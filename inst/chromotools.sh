@@ -180,7 +180,7 @@ fi
 # -------------------------------------------------
 if [ "$mode_rearrange" = true ]; then
 
-    echo "Here"
+    echo "${path_project}.intermediate/"
     # Path with alignments
     shopt -s nullglob
     matches=("${path_project}.intermediate"/alignments_*)
