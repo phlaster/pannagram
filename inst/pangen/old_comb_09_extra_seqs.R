@@ -700,7 +700,7 @@ if(F){
 #   system(paste0('blastn -db ',file.br.cons,' -query ',file.br.add,
 #                 ' -num_alignments 50 ',
 #                 ' -out ',file.br.out,
-#                 ' -outfmt "7 qseqid qstart qend sstart send pident length qseq sseq sseqid"'))
+#                 ' -outfmt "6 qseqid qstart qend sstart send pident length qseq sseq sseqid"'))
 #   
 #   # Read the BLAST output into a data frame
 #   x = readBlast(file.br.out)

@@ -23,7 +23,7 @@
 #' @examples
 #' 
 #' # First, generate the required data structure using the BLAST command:
-#' # blastn -db db.fasta -query query.fasta -out out.txt -outfmt "7 qseqid qstart qend sstart send pident length sseqid"
+#' # blastn -db db.fasta -query query.fasta -out out.txt -outfmt "6 qseqid qstart qend sstart send pident length sseqid"
 #' # Then, read the output into a data frame:
 #' v <- read.table('out.txt', stringsAsFactors = FALSE)
 #' 

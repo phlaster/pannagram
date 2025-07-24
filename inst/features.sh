@@ -219,7 +219,7 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
             blastp -db "${set_file_prot}" \
                    -query "${path_sv}sv_in_graph_orfs.fasta" \
                    -out "${path_sv}blast_sv_orfs_on_set.txt" \
-                   -outfmt "7 qseqid qstart qend sstart send pident length sseqid" \
+                   -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
                    -num_threads "${cores}"
         else
             pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."

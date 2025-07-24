@@ -498,7 +498,7 @@ blastTwoSeqs <- function(s1, s2, path.work){
   system(paste0('blastn -db ',file.seqs.tmp,' -query ',file.seqs.tmp,
                 ' -num_alignments 50 ',
                 ' -out ',file.blast.cons,
-                ' -outfmt "7 qseqid qstart qend sstart send pident length qseq sseq sseqid"'))
+                ' -outfmt "6 qseqid qstart qend sstart send pident length qseq sseq sseqid"'))
   
   # Read the BLAST output into a data frame
   x = readBlast(file.blast.cons)
@@ -573,12 +573,12 @@ blastTwoSeqs2 <- function(s1, s2, path.work){
   system(paste0('blastn -db ',file.seqs.tmp2,' -query ',file.seqs.tmp1,
                 ' -num_alignments 50 ',
                 ' -out ',file.blast1,
-                ' -outfmt "7 qseqid qstart qend sstart send pident length sseqid"'))
+                ' -outfmt "6 qseqid qstart qend sstart send pident length sseqid"'))
   
   system(paste0('blastn -db ',file.seqs.tmp1,' -query ',file.seqs.tmp2,
                 ' -num_alignments 50 ',
                 ' -out ',file.blast2,
-                ' -outfmt "7 qseqid qstart qend sstart send pident length sseqid"'))
+                ' -outfmt "6 qseqid qstart qend sstart send pident length sseqid"'))
   
   # Read the BLAST output into a data frame
   x1 = readBlast(file.blast1)
