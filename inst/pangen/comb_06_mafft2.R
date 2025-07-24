@@ -95,7 +95,7 @@ loop.function <- function(f.in,
     return()
   }
   
-  # cnt N
+  # Proportion of non-N nucleotides
   n.n = c()
   for(s in seqs.clean){
     s.tmp = seq2nt(s)
@@ -103,7 +103,7 @@ loop.function <- function(f.in,
   }
   
   if(min(n.n) < 0.5){
-    pokazAttention('Too mane N to align', file=file.log.loop, echo=echo.loop)
+    pokazAttention('Too many N to align', file=file.log.loop, echo=echo.loop)
     pokaz('Done.', file=file.log.loop, echo=echo.loop)
     return()
   }

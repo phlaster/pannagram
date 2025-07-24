@@ -15,7 +15,7 @@ pokazAttention('Make sure that the consensus sequences for the pangenome chromos
 args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
-  make_option(c("--ref.pref"),  type = "character", default = NULL, help = "prefix of the reference file"),
+  make_option(c("--ref"),  type = "character", default = NULL, help = "prefix of the reference file"),
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
   make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
   make_option("--path.sv", type = "character", default = NULL, help = "Path to sv dir"),
@@ -73,13 +73,8 @@ if (!is.null(opt$aln.type)) {
 }
 
 # Reference genome
-if (is.null(opt$ref.pref) || (opt$ref.pref == "NULL")) {
-  ref.pref <- ""
-  ref.suff = ""
-} else {
-  ref.pref <- opt$ref.pref
-  ref.suff <- paste0('_ref_', ref.pref)
-}
+ref.name <- opt$ref
+if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
 
 path.features.msa <- opt$path.features.msa
 if(!dir.exists(path.features.msa)) stop(paste0('No Consensus directory found!', path.features.msa))
@@ -99,21 +94,29 @@ big.len <- opt$big.len
 max.len <- opt$max.len
 
 # ---- Combinations of chromosomes query-base to create the alignments ----
+s.pattern <- paste0("^", aln.type, ".*h5")
+s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
+s.combinations = gsub(aln.type, "", s.combinations)
+s.combinations = gsub(".h5", "", s.combinations)
 
-s.pattern <- paste0("^", aln.type, ".*", ref.suff, "\\.h5")
-# pokaz(s.pattern)
-# pokaz(path.features.msa)
-files <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-# pokaz(files)
-
-pref.combinations = gsub(aln.type, "", files)
-pref.combinations <- sub(ref.suff, "", pref.combinations)
-pref.combinations <- sub(".h5", "", pref.combinations)
-
-if(length(pref.combinations) == 0){
-  stop('No Combinations found.')
+# pokaz('Reference:', ref.name)
+if(ref.name != ""){
+  ref.suff = paste0('_', ref.name)
+  
+  pokaz('Reference:', ref.name)
+  s.combinations <- s.combinations[grep(ref.suff, s.combinations)]
+  s.combinations = gsub(ref.suff, "", s.combinations)
+  
 } else {
-  pokaz('Combinations', pref.combinations)  
+  ref.suff = ''
+}
+
+if(length(s.combinations) == 0){
+  # save(list = ls(), file = "tmp_workspace_s.RData")
+  stop('No Combinations found.')
+  
+} else {
+  pokaz('Combinations', s.combinations)  
 }
 
 # ---- Positions of SVs ----
@@ -122,7 +125,7 @@ sv.pos.all = c()
 sv.beg.all = c()
 sv.end.all = c()
 
-for(s.comb in pref.combinations){
+for(s.comb in s.combinations){
   pokaz('Run for combination', s.comb, "...")
   
   # Get file for the combination
@@ -436,7 +439,7 @@ file.sv.big =  paste0(path.sv, 'seq_sv_big.fasta')
 
 seqs.small = c()
 seqs.big = c()
-for(s.comb in pref.combinations){
+for(s.comb in s.combinations){
   i.chr = comb2ref(s.comb)
   pokaz('Chromosome', i.chr)
   file.chr = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')

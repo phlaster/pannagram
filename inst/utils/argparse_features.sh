@@ -6,7 +6,8 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-aln_type='msa_'
+aln_type=''
+ref_pref=''
 run_blocks=false
 run_seq=false
 run_aln=false
@@ -62,3 +63,26 @@ acc_anal="${acc_anal:-NULL}"
 ref_pref="${ref_pref:-NULL}"
 
 path_project=$(add_symbol_if_missing "$path_project" "/")
+
+if [ -z "$ref_pref" ]; then
+  ref_pref="NULL"
+else
+    if [[ -z "$aln_type" || "$aln_type" == "res_" ]]; then
+      aln_type="ref_"
+    else
+      pokaz_error "Error: aln_type is already set to '$aln_type', but should be ref_"
+      exit 1
+    fi
+fi
+
+# Setup the alignment type
+if [ -z "$aln_type" ]; then
+  aln_type="msa_"  # Default
+fi
+
+
+
+
+
+
+

@@ -22,6 +22,7 @@ opt_parser = OptionParser(option_list = option_list)
 
 # Parse the arguments
 opt = parse_args(opt_parser)
+print(opt)
 
 # Check for the presence of all required arguments
 fasta.file <- ifelse(!is.null(opt$in_file), opt$in_file, 
@@ -34,18 +35,18 @@ output.file <- ifelse(!is.null(opt$out), opt$out,
                       stop("Output file not specified", call. = FALSE))
 sim.cutoff <- ifelse(!is.null(opt$sim), opt$sim, 
                      stop("Similarity threshold not specified", call. = FALSE))
-
 use.strand <- ifelse(!is.null(opt$use_strand), as.logical(opt$use_strand), 
                      stop("Strand should be provided", call. = FALSE))
-
 coverage <- ifelse(!is.null(opt$coverage), opt$coverage, 
-                   stop("Similarity threshold not specified", call. = FALSE))
+                   stop("Coverage threshold not specified", call. = FALSE))
 
 # ---- Main ----
 
 v = readBlast(blast.file)
 v = v[v$V6 >= sim.cutoff,]
 v = v[v$V1 != v$V8,]
+
+print(v)
 
 if(nrow(v) == 0){
   pokazAttention('No similarity in SVs, NO SVs were genegated')
@@ -57,6 +58,8 @@ uniq1 = !duplicated(v$V1)
 len1 = setNames(v$V9[uniq1], v$V1[uniq1])
 uniq8 = !duplicated(v$V8)
 len8 = setNames(v$V10[uniq8], v$V8[uniq8])
+
+print('here')
                 
 # Nestedness
 res = findNestedness(v, use.strand=use.strand)

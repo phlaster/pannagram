@@ -13,7 +13,7 @@ suppressMessages({
 args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
-  make_option(c("--ref.pref"),    type = "character", default = NULL, help = "prefix of the reference file"),
+  make_option("--ref",               type = "character", default = "",   help = "Prefix of the reference file"),
   make_option(c("--path.chr"),    type = "character", default = NULL, help = "path to directory with chromosomes"),
   make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
@@ -41,15 +41,8 @@ if(num.cores > 1){
   registerDoParallel(myCluster)  
 }
 
-# Reference genome
-if (is.null(opt$ref.pref) || (opt$ref.pref == "NULL")) {
-  ref.pref <- ""
-  ref.suff = ""
-} else {
-  ref.pref <- opt$ref.pref
-  ref.suff <- paste0('_ref_', ref.pref)
-}
-
+ref.name <- opt$ref
+if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
 
 # Alignment prefix
 if (!is.null(opt$aln.type)) {
@@ -65,25 +58,34 @@ if(!dir.exists(path.features.msa)) stop('features/msa dir doesn’t exist')
 path.chr <- opt$path.chr
 if(!dir.exists(path.chr)) stop('intermediate/chromosomes dir doesn’t exist')
 
-
 # ---- Combinations of chromosomes query-base to create the alignments ----
+s.pattern <- paste0("^", aln.type, ".*h5")
+s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
+s.combinations = gsub(aln.type, "", s.combinations)
+s.combinations = gsub(".h5", "", s.combinations)
 
-s.pattern <- paste0("^", aln.type, ".*", ref.suff, "\\.h5")
-# pokaz(s.pattern)
-
-# pokaz('Consensus folder', path.features.msa)
-files <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-# pokaz(files)
-
-pref.combinations = gsub(aln.type, "", files)
-pref.combinations <- sub(ref.suff, "", pref.combinations)
-pref.combinations <- sub(".h5", "", pref.combinations)
-
-if(length(pref.combinations) == 0){
-  stop('No Combinations found.')
+# pokaz('Reference:', ref.name)
+if(ref.name != ""){
+  ref.suff = paste0('_', ref.name)
+  
+  pokaz('Reference:', ref.name)
+  s.combinations <- s.combinations[grep(ref.suff, s.combinations)]
+  s.combinations = gsub(ref.suff, "", s.combinations)
+  
 } else {
-  pokaz('Combinations', pref.combinations)  
+  ref.suff = ''
 }
+
+if(length(s.combinations) == 0){
+  # save(list = ls(), file = "tmp_workspace_s.RData")
+  stop('No Combinations found.')
+  
+} else {
+  pokaz('Combinations', s.combinations)  
+}
+
+
+# ---- Variables ----
 
 s.nts = c('A', 'C', 'G', 'T', '-')
 
@@ -199,7 +201,7 @@ loop.function <- function(s.comb, echo = T){
 
 if(num.cores == 1){
   
-  for(s.comb in pref.combinations){
+  for(s.comb in s.combinations){
     loop.function(s.comb)
   }
 } else {
@@ -207,7 +209,7 @@ if(num.cores == 1){
   myCluster <- makeCluster(num.cores, type = "PSOCK") 
   registerDoParallel(myCluster) 
   
-  foreach(s.comb = pref.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
+  foreach(s.comb = s.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
     tmp = loop.function(s.comb)
     return(tmp)
   }

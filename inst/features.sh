@@ -8,14 +8,16 @@ source "$INSTALLED_PATH/utils/help_features.sh"
 source "$INSTALLED_PATH/utils/argparse_features.sh" "$@"
 source "$INSTALLED_PATH/utils/chunk_paths.sh" # requires path_project variable
 
+check_dir ${path_project}
 
 # General alignment processing
 if [ "$run_blocks" = true ]; then # -blocks
     pokaz_stage "Get blocks."
 
-    check_dir "$path_inter_msa"    || exit 1
+    # check_dir "$path_inter_msa"    || exit 1
     check_dir "$path_features_msa" || exit 1
 
+    mkdir -p "${path_inter_msa}"
     mkdir -p ${path_plots_synteny}
 
     Rscript $INSTALLED_PATH/analys/analys_01_blocks3.R \
@@ -39,7 +41,7 @@ if [ "$run_seq" = true ]; then # -seq
     mkdir -p $path_seq
     Rscript $INSTALLED_PATH/analys/analys_02_seq_cons.R \
         --path.features.msa ${path_features_msa} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --path.chr ${path_chrom} \
         --path.seq ${path_seq} \
         --aln.type ${aln_type} \
@@ -72,7 +74,7 @@ if [ "$run_snp" = true ]; then # -snp
         --path.features.msa ${path_features_msa} \
         --path.snp ${path_snp} \
         --path.seq ${path_seq} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --aln.type ${aln_type} \
         --cores ${cores}
 
@@ -136,7 +138,7 @@ if [ "$run_sv_call" = true ]; then # -sv_call|-sv
         --path.seq ${path_seq} \
         --path.sv ${path_sv} \
         --path.gff ${path_gff} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --aln.type ${aln_type} \
         --acc.anal ${acc_anal}
     
@@ -173,6 +175,8 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
         pokaz_message "Simirarity value is 85% (default)"
         similarity_value=85
     fi
+    coverage_value=${similarity_value}
+    pokaz_message "Coverage value is set to ${coverage_value}%"
 
     check_dir "$path_features_msa" || exit 1
     check_dir "$path_sv"           || exit 1
@@ -186,14 +190,22 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
     
     # if [ ! -f "${file_sv_big_on_sv}" ]; then
         blastn -db ${file_sv_big} -query ${file_sv_big} -out ${file_sv_big_on_sv} \
-           -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
-           -perc_identity ${similarity_value} -num_threads "${cores}"
+           -perc_identity ${similarity_value} \
+           -num_threads "${cores}" \
+           -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen"
+           
     # fi
     pokaz_message "Blast is done."
 
     file_sv_big_on_sv_cover=${file_sv_big%.fasta}_on_sv_cover.rds
-    Rscript $INSTALLED_PATH/sim/sim_in_seqs.R --in_file ${file_sv_big} --db_file ${file_sv_big} --res ${file_sv_big_on_sv} \
-            --out ${file_sv_big_on_sv_cover} --sim ${similarity_value} --use_strand T
+    Rscript $INSTALLED_PATH/sim/sim_in_seqs.R \
+        --in_file ${file_sv_big} \
+        --db_file ${file_sv_big} \
+        --res ${file_sv_big_on_sv} \
+        --out ${file_sv_big_on_sv_cover} \
+        --use_strand T \
+        --sim ${similarity_value} \
+        --coverage ${coverage_value}
 
     rm "$file_sv_big".nin
     rm "$file_sv_big".nhr

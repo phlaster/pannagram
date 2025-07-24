@@ -36,9 +36,7 @@ ref.name <- opt$ref
 num.cores <- opt$cores
 wnd.size <- opt$wnd.size
 
-
 if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
-
 
 path.features.msa <- opt$path.features.msa
 if(!dir.exists(path.features.msa)) stop('features/msa dir doesn’t exist')
