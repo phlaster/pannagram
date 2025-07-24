@@ -196,12 +196,12 @@ plotSynAllChr <- function(path.aln,
   # save(list = ls(), file = "tmp_workspace_plot.RData")
   
   # Check that all choromosomes are presented
-  pokaz(nrow(chr.len.acc), n.chr.acc)
   if(nrow(chr.len.acc) != n.chr.acc){
+    pokaz(nrow(chr.len.acc), n.chr.acc)
     stop('Wrong number of chromosomes in accession')
   } 
-  pokaz(nrow(chr.len.ref), n.chr.ref)
   if(nrow(chr.len.ref) != n.chr.ref){
+    pokaz(nrow(chr.len.ref), n.chr.ref)
     stop('Wrong number of chromosomes in reference')
   } 
   
@@ -233,9 +233,7 @@ plotSynAllChr <- function(path.aln,
   for (i.acc in order.acc) {
     for (i.ref in order.ref) {
       file.aln = paste0(path.aln, acc, "_", i.acc, "_", i.ref, "_maj.rds")
-      pokaz(file.aln)
       if (file.exists(file.aln)) {
-        pokaz('have it')
         # Synteny
         data.ij <- readRDS(file.aln)
         data.ij[, c(2, 3)] = data.ij[, c(2, 3)] + cum.acc[i.acc]
