@@ -180,7 +180,6 @@ fi
 # -------------------------------------------------
 if [ "$mode_rearrange" = true ]; then
 
-    echo "${path_project}.intermediate/"
     # Path with alignments
     shopt -s nullglob
     matches=("${path_project}.intermediate/alignments/"*)
@@ -192,8 +191,6 @@ if [ "$mode_rearrange" = true ]; then
       0) echo "Error: No matching paths found." >&2; exit 1 ;;
       *) echo "Error: Multiple matching paths found:" >&2; printf ' - %s\n' "${matches[@]}" >&2; exit 1 ;;
     esac
-
-    echo "${path_aln}"
 
     # Path with chromosomes
     path_chr="${path_project}.intermediate/chromosomes/"
