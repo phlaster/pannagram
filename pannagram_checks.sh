@@ -28,6 +28,9 @@ echo -e "[1] \033[34mRemoving any potential old installations of $PACKAGE_NAME\0
 Rscript -e "
 invisible(suppressMessages(tryCatch(remove.packages('$PACKAGE_NAME'), error = function(e) NULL)))
 "
+Rscript -e "
+invisible(suppressMessages(tryCatch(devtools::clean_dll(), error = function(e) NULL)))
+"
 rm -fr $CONDA_PREFIX/lib/R/library/$PACKAGE_NAME # double take
 
 
