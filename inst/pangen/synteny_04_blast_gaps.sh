@@ -210,19 +210,19 @@ export -f process_db
 
 # files_acc=($(find ${path_gaps} -name '*query*.fasta'))
 
-# parallel -j ${cores} process_db ::: ${files_acc[@]}
-# parallel -j ${cores}  process_blast_normal ::: "${files_acc[@]}" 
-# parallel -j ${cores}  process_blast_cross ::: "${files_acc[@]}" 
+# parallel --will-cite -j ${cores} process_db ::: ${files_acc[@]}
+# parallel --will-cite -j ${cores}  process_blast_normal ::: "${files_acc[@]}" 
+# parallel --will-cite -j ${cores}  process_blast_cross ::: "${files_acc[@]}" 
 
-find "${path_gaps}" -name '*query*.fasta' | parallel -j "${cores}" process_db
-find "${path_gaps}" -name '*query*.fasta' | parallel -j "${cores}" process_blast_normal
-find "${path_gaps}" -name '*query*.fasta' | parallel -j "${cores}" process_blast_cross
+find "${path_gaps}" -name '*query*.fasta' | parallel --will-cite -j "${cores}" process_db
+find "${path_gaps}" -name '*query*.fasta' | parallel --will-cite -j "${cores}" process_blast_normal
+find "${path_gaps}" -name '*query*.fasta' | parallel --will-cite -j "${cores}" process_blast_cross
 
 
 
-# find ${path_gaps} -name '*query*.fasta' | parallel -j ${cores} process_db {} $path_gaps $path_db ${log_path}
-# find ${path_gaps} -name '*query*.fasta' | parallel -j ${cores} process_blast_normal {} $path_gaps $path_db ${log_path} ${p_ident}
-# find ${path_gaps} -name '*query*.fasta' | parallel -j ${cores} process_blast_cross {} $path_gaps $path_db ${log_path} ${p_ident}
+# find ${path_gaps} -name '*query*.fasta' | parallel --will-cite -j ${cores} process_db {} $path_gaps $path_db ${log_path}
+# find ${path_gaps} -name '*query*.fasta' | parallel --will-cite -j ${cores} process_blast_normal {} $path_gaps $path_db ${log_path} ${p_ident}
+# find ${path_gaps} -name '*query*.fasta' | parallel --will-cite -j ${cores} process_blast_cross {} $path_gaps $path_db ${log_path} ${p_ident}
 
 
 # pokaz_message "Done!"

@@ -192,7 +192,7 @@ else
 fi
 
 # Run BLAST in parallel
-parallel -j $cores --link run_blast ::: "${files_acc[@]}" ::: "${files_ref[@]}" ::: "${files_out[@]}" ::: "${files_log[@]}"
+parallel --will-cite -j $cores --link run_blast ::: "${files_acc[@]}" ::: "${files_ref[@]}" ::: "${files_out[@]}" ::: "${files_log[@]}"
 
 
 
