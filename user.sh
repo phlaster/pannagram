@@ -13,6 +13,7 @@ else
 fi
 
 echo -e "[4] \033[34mPannagram documentation installation\033[0m"
+rm -rf man/
 Rscript -e "
 suppressMessages(devtools::document(quiet=TRUE))
 "

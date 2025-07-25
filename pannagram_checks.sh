@@ -44,9 +44,6 @@ find inst -type f -name "*.R" -exec sh -c '
   done
 ' sh {} +
 
-# Remove old manuals directory
-rm -rf man/
-
 
 # Scripts force linking to Conda env
 echo -e "[3] \033[34mUpdating symlinks for Bash scripts\033[0m"
