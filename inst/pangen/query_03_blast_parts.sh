@@ -192,7 +192,7 @@ ref_count=$(ls "${path_chrom}" | grep "^${ref_name}.*_chr.*\.fasta$" | wc -l)
 # fi
 
 # # Run BLAST in parallel
-# parallel -j $cores --link run_blast ::: "${files_acc[@]}" ::: "${files_ref[@]}" ::: "${files_out[@]}" ::: "${files_log[@]}"
+# parallel --will-cite -j $cores --link run_blast ::: "${files_acc[@]}" ::: "${files_ref[@]}" ::: "${files_out[@]}" ::: "${files_log[@]}"
 
 
 # Initialize arrays to store file paths
@@ -243,7 +243,7 @@ else
 fi
 
 # Run BLAST in parallel
-parallel -j $cores --link run_blast :::: "$temp_acc" :::: "$temp_ref" :::: "$temp_out" :::: "$temp_log"
+parallel --will-cite -j $cores --link run_blast :::: "$temp_acc" :::: "$temp_ref" :::: "$temp_out" :::: "$temp_log"
 
 # Clean up temporary files
 rm -f "$temp_acc" "$temp_ref" "$temp_out" "$temp_log"
