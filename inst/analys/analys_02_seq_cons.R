@@ -113,7 +113,7 @@ loop.function <- function(s.comb, echo = T){
   
   mx.consensus = NULL
   idx.negative = c()
-  for(acc in accessions){
+  for(acc in rev(accessions)){
     pokaz('Sequence of accession', acc)
     v = h5read(file.comb, paste0(gr.accs.e, acc))
     v.na = is.na(v)
@@ -132,6 +132,8 @@ loop.function <- function(s.comb, echo = T){
     genome = readFasta(file.chr)
     genome = seq2nt(genome)
     genome = toupper(genome)
+    
+    save(list = ls(), file = "tmp_workspace_test_seqs_acc.RData")
   
     s = rep('-', length(v))
     idx.plus = (v > 0)
