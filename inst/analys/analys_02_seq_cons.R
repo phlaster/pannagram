@@ -95,7 +95,6 @@ s.nts = c('A', 'C', 'G', 'T', '-')
 loop.function <- function(s.comb, echo = T){
 # tmp = foreach(s.comb = pref.combinations, .packages=c('rhdf5', 'crayon'))  %dopar% {  # which accession to use
 # # for(s.comb in pref.combinations){
-  s.comb = '2_1'
   pokaz('* Combination', s.comb)
   
   # Get accessions
@@ -124,8 +123,6 @@ loop.function <- function(s.comb, echo = T){
     if(is.null(mx.consensus)){
       mx.consensus = matrix(0, nrow = length(v), ncol = length(s.nts), dimnames = list(NULL, s.nts))
     }
-    
-    print(mx.consensus[19698290,])
     
     if(acc == ref.name){
       q.chr = strsplit(s.comb, '_')[[1]][2]
