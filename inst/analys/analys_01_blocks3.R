@@ -3,7 +3,6 @@
 suppressMessages({
   library(foreach)
   library(doParallel)
-  library(optparse)
   library(crayon)
   library(rhdf5)
   library(pannagram)
@@ -53,7 +52,7 @@ if(!dir.exists(path.figures)) stop('Consensus folder doesn’t exist')
 s.pattern <- paste0("^", aln.type, ".*h5")
 # pokaz(aln.type)
 s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-pokaz(s.combinations)
+# pokaz(s.combinations)
 s.combinations = gsub(aln.type, "", s.combinations)
 # pokaz(s.combinations)
 s.combinations = gsub(".h5", "", s.combinations)
@@ -96,18 +95,30 @@ if(!file.exists(file.blocks)){
     groups = h5ls(file.comb.in)
     accessions = groups$name[groups$group == gr.accs.b]
     
+    processAcc <- function(acc) {
+      pokaz('Accession', acc)
+      v <- h5read(file.comb.in, paste0(gr.accs.e, acc))
+      
+      df.acc <- getBlocks(v, f.split = FALSE)
+      df.acc$acc <- acc
+      df.acc$comb <- s.comb
+      
+      df.acc
+    }
+    
     myCluster <- makeCluster(num.cores, type = "PSOCK") 
     registerDoParallel(myCluster) 
     
-    df = foreach(acc = accessions, .packages = c('rhdf5', 'crayon', 'pannagram'), .combine = rbind) %dopar% {
-      pokaz('Accession', acc)
-      v = h5read(file.comb.in, paste0(gr.accs.e, acc))
+    if (num.cores == 1) {
+      df <- do.call(rbind, lapply(accessions, processOne))
+    } else {
+      myCluster <- makeCluster(num.cores, type = "PSOCK") 
+      registerDoParallel(myCluster) 
       
-      df.acc = getBlocks(v, f.split = F)
-      df.acc$acc = acc
-      df.acc$comb = s.comb
-      
-      df.acc
+      df <- foreach(acc = accessions, .packages = c('rhdf5', 'crayon', 'pannagram'), .combine = rbind) %dopar% {
+        processOne(acc)
+      }
+      stopCluster(myCluster)
     }
     
     df.all = rbind(df.all, df)
