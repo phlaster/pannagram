@@ -111,13 +111,13 @@ if(!file.exists(file.blocks)){
     registerDoParallel(myCluster) 
     
     if (num.cores == 1) {
-      df <- do.call(rbind, lapply(accessions, processOne))
+      df <- do.call(rbind, lapply(accessions, processAcc))
     } else {
       myCluster <- makeCluster(num.cores, type = "PSOCK") 
       registerDoParallel(myCluster) 
       
       df <- foreach(acc = accessions, .packages = c('rhdf5', 'crayon', 'pannagram'), .combine = rbind) %dopar% {
-        processOne(acc)
+        processAcc(acc)
       }
       stopCluster(myCluster)
     }
