@@ -167,7 +167,7 @@ for(s.comb in unique(df.all$comb)){
     pokazAttention('Synteny plot can not be generated for combination', s.comb)
     next
   }
-  df.tmp$acc <- factor(df.tmp$acc, levels = accessions[i.order])
+  df.tmp$acc <- factor(df.tmp$acc, levels = intersect(accessions[i.order], unique(df.tmp$acc)))
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
   
