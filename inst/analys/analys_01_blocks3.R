@@ -139,7 +139,7 @@ if(!file.exists(file.blocks)){
   df.all$pan.b[idx.dir] = df.all$pan.e[idx.dir]
   df.all$pan.e[idx.dir] = tmp
   
-  save(list = ls(), file = "tmp_workspace_synblocks_test.RData")
+  # save(list = ls(), file = "tmp_workspace_synblocks_test.RData")
   
   saveRDS(df.all, file.blocks)  
 } else {
