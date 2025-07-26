@@ -1193,7 +1193,7 @@ repeatScore <- function(s, wsize = 11, dup.cutoff = 2){
 #' @export
 comb2ref <- function(s.comb){
   pattern <- "^\\d+_\\d+$"
-  if(!grepl(pattern, s.comb)) stop('Something is wrong with the bombinations of chromosomes')
+  if(!grepl(pattern, s.comb)) stop('Something is wrong with the combinations of chromosomes')
   ref.chr = as.numeric(strsplit(s.comb, '_')[[1]][2])
   return(ref.chr)
 }

@@ -95,7 +95,7 @@ s.nts = c('A', 'C', 'G', 'T', '-')
 loop.function <- function(s.comb, echo = T){
 # tmp = foreach(s.comb = pref.combinations, .packages=c('rhdf5', 'crayon'))  %dopar% {  # which accession to use
 # # for(s.comb in pref.combinations){
-  
+  s.comb = '2_1'
   pokaz('* Combination', s.comb)
   
   # Get accessions
@@ -106,7 +106,7 @@ loop.function <- function(s.comb, echo = T){
   n.acc = length(accessions)
   
   # File with sequences
-  file.seq = paste0(path.seq, 'seq_', s.comb,ref.suff,'.h5')
+  file.seq = paste0(path.seq, 'seq_', s.comb, ref.suff,'.h5')
   if (file.exists(file.seq)) file.remove(file.seq)
   h5createFile(file.seq)
   h5createGroup(file.seq, gr.accs.e)
@@ -168,8 +168,9 @@ loop.function <- function(s.comb, echo = T){
   # ---- Consensus sequence ----
   pokaz('Prepare consensus fasta-sequence')
   i.chr = comb2ref(s.comb)
-  file.seq.cons = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')
+  file.seq.cons = paste0(path.seq, 'seq_cons_', s.comb, ref.suff, '.fasta')
   
+  save(list = ls(), file = "tmp_workspace_test_seqs.RData")
   
   n = nrow(mx.consensus)
   s.cons = rep('N', n)
