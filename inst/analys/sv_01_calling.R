@@ -126,6 +126,16 @@ sv.beg.all = c()
 sv.end.all = c()
 
 for(s.comb in s.combinations){
+  
+  q.chr = strsplit(s.comb, '_')[[1]][1]
+  r.chr = strsplit(s.comb, '_')[[1]][2]
+  if(q.chr != r.chr) {
+    pokazAttention('Alignment of query chromosome', q.chr, 
+                   'to the reference chromosome', r.chr, 'will be skipped.',
+                   'For SV calling, only matching chromosome IDs are allowed.')
+    next
+  }
+  
   pokaz('Run for combination', s.comb, "...")
   
   # Get file for the combination
@@ -451,15 +461,8 @@ for(s.comb in s.combinations){
   idx.small = which((sv.pos.all$single == 1) & 
                       (sv.pos.all$len >= min.len) & 
                       (sv.pos.all$len < big.len) & (sv.pos.all$chr == i.chr))
-  # print(head(idx.small))
   for(irow in idx.small){
     s.tmp = s.chr[(sv.pos.all$beg[irow] + 1):(sv.pos.all$end[irow] - 1) ]
-    # print('---')
-    # print(s.tmp)
-    # print((sv.pos.all$beg[irow] + 1))
-    # print(sv.pos.all$end[irow] - 1)
-    # print(sum(s.tmp == 'N'))
-    # print((0.5 * length(s.tmp)))
     if(sum(s.tmp == 'N') > (0.5 * length(s.tmp))) next
     seqs.small[paste(sv.pos.all$gr[irow],sv.pos.all$len[irow], sep = '|')] = paste0(s.tmp, collapse = '')
   }

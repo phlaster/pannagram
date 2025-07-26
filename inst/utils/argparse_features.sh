@@ -60,7 +60,6 @@ fi
 
 cores="${cores:-1}"
 acc_anal="${acc_anal:-NULL}"
-ref_pref="${ref_pref:-NULL}"
 
 path_project=$(add_symbol_if_missing "$path_project" "/")
 
@@ -79,10 +78,6 @@ fi
 if [ -z "$aln_type" ]; then
   aln_type="msa_"  # Default
 fi
-
-
-
-
 
 
 

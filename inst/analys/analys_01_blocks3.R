@@ -51,8 +51,9 @@ if(!dir.exists(path.figures)) stop('Consensus folder doesn’t exist')
 
 # ---- Combinations of chromosomes query-base to create the alignments ----
 s.pattern <- paste0("^", aln.type, ".*h5")
+# pokaz(aln.type)
 s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-# pokaz(s.combinations)
+pokaz(s.combinations)
 s.combinations = gsub(aln.type, "", s.combinations)
 # pokaz(s.combinations)
 s.combinations = gsub(".h5", "", s.combinations)
@@ -87,8 +88,7 @@ if(!file.exists(file.blocks)){
   df.all = c()
   for(s.comb in s.combinations){
     
-    i.chr = as.numeric(strsplit(s.comb, '_')[[1]][1])
-    pokaz('Chromosome', i.chr)
+    pokaz('Combination', s.comb)
     # --- --- --- --- --- --- --- --- --- --- ---
     
     file.comb.in = paste0(path.features.msa, aln.type, s.comb, ref.suff,'.h5')
@@ -105,7 +105,7 @@ if(!file.exists(file.blocks)){
       
       df.acc = getBlocks(v, f.split = F)
       df.acc$acc = acc
-      df.acc$chr = i.chr
+      df.acc$comb = s.comb
       
       df.acc
     }
@@ -138,22 +138,22 @@ if(!file.exists(file.blocks)){
 
 pokaz("Plots...")
 accessions = unique(df.all$acc)
-n.chr = max(df.all$chr)
 
-for(i.chr in 1:n.chr){
-  pokaz('Chromosome', i.chr)
+for(s.comb in s.combinations){
+  pokaz('Combination', s.comb)
   i.order = 1:length(accessions)
   
   # i.order = c(2,  6,  5,  4,  3,  7,  9, 10,  8, 11,  1, 12)
   # pokaz(i.order)
   
   df.tmp = df.all
+  df.tmp = df.all[df.all$comb == s.comb,]
   df.tmp$acc <- factor(df.tmp$acc, levels = accessions[i.order])
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
   
-  p = panplot(df.tmp, i.chr, accessions = accessions, i.order = i.order, wnd.size=wnd.size) 
-  savePDF(p, path = path.figures, name = paste0('fig_synteny_chr',i.chr), width = 6, height = 4 / 27 * length(accessions))
+  p = panplot(df.tmp, accessions = accessions, i.order = i.order, wnd.size=wnd.size) 
+  savePDF(p, path = path.figures, name = paste0('fig_synteny_',s.comb), width = 6, height = 4 / 27 * length(accessions))
 }
 
 
