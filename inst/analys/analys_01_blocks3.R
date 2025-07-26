@@ -104,10 +104,11 @@ if(!file.exists(file.blocks)){
       save(list = ls(), file = "tmp_workspace_acc.RData")
       
       df.acc <- getBlocks(v, f.split = FALSE)
+      if(nrow(df.acc) == 0) return(NULL)
       df.acc$acc <- acc
       df.acc$comb <- s.comb
       
-      df.acc
+      return(df.acc)
     }
     
     if (num.cores == 1) {
