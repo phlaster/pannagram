@@ -165,6 +165,8 @@ loop.function <- function(s.comb, echo = T){
     rmSafe(idx.mins)
     gc()
     
+    stop('stop')
+    
   }
   
   suppressMessages({
