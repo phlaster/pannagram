@@ -89,6 +89,7 @@ if(!file.exists(file.blocks)){
   for(s.comb in s.combinations){
     
     pokaz('Combination', s.comb)
+    s.comb = '1_2'
     # --- --- --- --- --- --- --- --- --- --- ---
     
     file.comb.in = paste0(path.features.msa, aln.type, s.comb, ref.suff,'.h5')
@@ -106,9 +107,6 @@ if(!file.exists(file.blocks)){
       
       df.acc
     }
-    
-    myCluster <- makeCluster(num.cores, type = "PSOCK") 
-    registerDoParallel(myCluster) 
     
     if (num.cores == 1) {
       df <- do.call(rbind, lapply(accessions, processAcc))
