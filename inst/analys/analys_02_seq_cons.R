@@ -149,6 +149,8 @@ loop.function <- function(s.comb, echo = T){
       mx.consensus[,s.nt] = mx.consensus[,s.nt] + (s == s.nt)
     }
     
+    print(mx.consensus[19698290,])
+    
     suppressMessages({
       h5write(s, file.seq, paste0(gr.accs.e, acc))
     })
