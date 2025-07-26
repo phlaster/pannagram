@@ -104,7 +104,10 @@ if(!file.exists(file.blocks)){
       save(list = ls(), file = "tmp_workspace_acc.RData")
       
       df.acc <- getBlocks(v, f.split = FALSE)
-      if(nrow(df.acc) == 0) return(NULL)
+      if(nrow(df.acc) == 0) {
+        pokaz('Null!')
+        return(NULL) 
+      }
       df.acc$acc <- acc
       df.acc$comb <- s.comb
       
@@ -125,7 +128,6 @@ if(!file.exists(file.blocks)){
     
     df.all = rbind(df.all, df)
     
-    stopCluster(myCluster)
     gc()
     
   }
@@ -152,7 +154,7 @@ if(!file.exists(file.blocks)){
 pokaz("Plots...")
 accessions = unique(df.all$acc)
 
-for(s.comb in s.combinations){
+for(s.comb in unique(df.all$comb)){
   pokaz('Combination', s.comb)
   i.order = 1:length(accessions)
   
@@ -161,6 +163,10 @@ for(s.comb in s.combinations){
   
   df.tmp = df.all
   df.tmp = df.all[df.all$comb == s.comb,]
+  if(length(unique(df.tmp$acc)) == 1){
+    pokazAttention('Synteny plot can not be generated for combination', s.comb)
+    next
+  }
   df.tmp$acc <- factor(df.tmp$acc, levels = accessions[i.order])
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
