@@ -114,7 +114,7 @@ loop.function <- function(s.comb, echo = T){
   mx.consensus = NULL
   idx.negative = c()
   for(acc in accessions){
-    # pokaz('Sequence of accession', acc)
+    pokaz('Sequence of accession', acc)
     v = h5read(file.comb, paste0(gr.accs.e, acc))
     v.na = is.na(v)
     v[v.na] = 0
