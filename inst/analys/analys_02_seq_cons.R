@@ -122,6 +122,8 @@ loop.function <- function(s.comb, echo = T){
       mx.consensus = matrix(0, nrow = length(v), ncol = length(s.nts), dimnames = list(NULL, s.nts))
     }
     
+    print(mx.consensus[19698290,])
+    
     q.chr = strsplit(s.comb, '_')[[1]][1]
     file.chr = paste0(path.chr, acc, '_chr', q.chr, '.fasta')
     if(!file.exists(file.chr)){
