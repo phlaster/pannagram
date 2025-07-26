@@ -106,7 +106,6 @@ loop.function <- function(s.comb, echo = T){
   if(ref.name %in% accessions){
     accessions = c(ref.name, setdiff(accessions, ref.name))
   }
-  pokaz(accessions)
   n.acc = length(accessions)
   
   # File with sequences
@@ -118,7 +117,7 @@ loop.function <- function(s.comb, echo = T){
   mx.consensus = NULL
   idx.negative = c()
   for(acc in accessions){
-    pokaz('Sequence of accession', acc)
+    # pokaz('Sequence of accession', acc)
     v = h5read(file.comb, paste0(gr.accs.e, acc))
     v.na = is.na(v)
     v[v.na] = 0
@@ -134,7 +133,7 @@ loop.function <- function(s.comb, echo = T){
       q.chr = strsplit(s.comb, '_')[[1]][1]  
     }
     
-    pokaz('Chromosome', q.chr)
+    pokaz('Accession', acc, 'Chromosome', q.chr)
     
     file.chr = paste0(path.chr, acc, '_chr', q.chr, '.fasta')
     if(!file.exists(file.chr)){
@@ -145,8 +144,6 @@ loop.function <- function(s.comb, echo = T){
     genome = toupper(genome)
     
     if(max(abs(v)) > length(genome)) stop('Length of the genome is shorter than the idex involded')
-    
-    # save(list = ls(), file = "tmp_workspace_test_seqs_acc.RData")
   
     s = rep('-', length(v))
     idx.plus = (v > 0)
@@ -164,15 +161,13 @@ loop.function <- function(s.comb, echo = T){
       mx.consensus[,s.nt] = mx.consensus[,s.nt] + (s == s.nt)
     }
     
-    print(mx.consensus[19698290,])
-    
     suppressMessages({
       h5write(s, file.seq, paste0(gr.accs.e, acc))
     })
     
     rmSafe(v)
     rmSafe(v.na)
-    # rmSafe(genome)
+    rmSafe(genome)
     rmSafe(s)
     rmSafe(idx.plus)
     rmSafe(idx.mins)
@@ -188,8 +183,6 @@ loop.function <- function(s.comb, echo = T){
   pokaz('Prepare consensus fasta-sequence')
   i.chr = comb2ref(s.comb)
   file.seq.cons = paste0(path.seq, 'seq_cons_', s.comb, ref.suff, '.fasta')
-  
-  save(list = ls(), file = "tmp_workspace_test_seqs.RData")
   
   n = nrow(mx.consensus)
   s.cons = rep('N', n)
