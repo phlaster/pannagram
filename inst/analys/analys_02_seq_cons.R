@@ -124,7 +124,14 @@ loop.function <- function(s.comb, echo = T){
     
     print(mx.consensus[19698290,])
     
-    q.chr = strsplit(s.comb, '_')[[1]][1]
+    if(acc == ref.name){
+      q.chr = strsplit(s.comb, '_')[[1]][2]
+    } else {
+      q.chr = strsplit(s.comb, '_')[[1]][1]  
+    }
+    
+    pokaz('Chromosome', q.chr)
+    
     file.chr = paste0(path.chr, acc, '_chr', q.chr, '.fasta')
     if(!file.exists(file.chr)){
       stop(paste0('Chromosomal file was not found', file.chr))
@@ -133,7 +140,7 @@ loop.function <- function(s.comb, echo = T){
     genome = seq2nt(genome)
     genome = toupper(genome)
     
-    save(list = ls(), file = "tmp_workspace_test_seqs_acc.RData")
+    # save(list = ls(), file = "tmp_workspace_test_seqs_acc.RData")
   
     s = rep('-', length(v))
     idx.plus = (v > 0)
@@ -164,8 +171,6 @@ loop.function <- function(s.comb, echo = T){
     rmSafe(idx.plus)
     rmSafe(idx.mins)
     gc()
-    
-    stop('stop')
     
   }
   
