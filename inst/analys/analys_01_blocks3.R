@@ -171,7 +171,10 @@ for(s.comb in unique(df.all$comb)){
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
   
-  p = panplot(df.tmp, accessions = accessions, i.order = i.order, wnd.size=wnd.size) 
+  p = panplot(df.tmp, 
+              accessions = unique(df.tmp$acc), 
+              i.order = length(unique(df.tmp$acc)), 
+              wnd.size=wnd.size) 
   savePDF(p, path = path.figures, name = paste0('fig_synteny_',s.comb), width = 6, height = 4 / 27 * length(accessions))
 }
 
