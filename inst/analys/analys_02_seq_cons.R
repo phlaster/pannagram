@@ -14,23 +14,20 @@ args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
   make_option("--ref",               type = "character", default = "",   help = "Prefix of the reference file"),
-  make_option(c("--path.chr"),    type = "character", default = NULL, help = "path to directory with chromosomes"),
-  make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
+  make_option("--path.chr",          type = "character", default = NULL, help = "path to directory with chromosomes"),
+  make_option("--path.seq",          type = "character", default = NULL, help = "Path to seq dir"),
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
-  make_option(c("-c", "--cores"), type = "integer",   default = 1,    help = "number of cores to use for parallel processing"),
-  make_option(c("--aln.type"),    type = "character", default = NULL, help = "type of alignment ('msa_', 'comb_', 'extra1_', etc)")
+  make_option("--cores",             type = "integer",   default = 1,    help = "number of cores to use for parallel processing"),
+  make_option("--aln.type",          type = "character", default = NULL, help = "type of alignment ('msa_', 'comb_', 'extra1_', etc)")
 );
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser, args = args);
 
-
 path.seq <- opt$path.seq
 if (!dir.exists(path.seq)) stop(paste0('No path.seq dir found!'))
 
-
 source(system.file("utils/chunk_hdf5.R", package = "pannagram"))
-
 
 # ***********************************************************************
 

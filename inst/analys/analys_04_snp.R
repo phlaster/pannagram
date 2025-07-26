@@ -95,10 +95,11 @@ if(length(s.combinations) == 0){
 # ---- Main ----
 flag.for = T
 for(s.comb in s.combinations){
+  pokaz('Combination', s.comb)
   
   # Get Consensus
   i.chr = comb2ref(s.comb)
-  file.seq.cons = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')
+  file.seq.cons = paste0(path.seq, 'seq_cons_', s.comb, ref.suff, '.fasta')
   s.pangen = readFastaMy(file.seq.cons)
   s.pangen.name = names(s.pangen)[1]
   s.pangen = seq2nt(s.pangen)
