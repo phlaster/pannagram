@@ -15,11 +15,11 @@ args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
-  make_option("--path.snp", type = "character", default = NULL, help = "Path to snp dir"),
-  make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
-  make_option(c("-c", "--cores"), type = "integer", default = 1,       help = "number of cores to use for parallel processing"),
-  make_option(c("--aln.type"),    type="character", default="default", help="type of alignment ('msa_', 'comb_', 'v_', etc)"),
-  make_option(c("--ref"),    type="character", default=NULL,      help="prefix of the reference file")
+  make_option("--path.snp",          type = "character", default = NULL, help = "Path to snp dir"),
+  make_option("--path.seq",          type = "character", default = NULL, help = "Path to seq dir"),
+  make_option("--cores",             type = "integer", default = 1,       help = "number of cores to use for parallel processing"),
+  make_option("--aln.type",          type="character", default="default", help="type of alignment ('msa_', 'comb_', 'v_', etc)"),
+  make_option("--ref",               type="character", default=NULL,      help="prefix of the reference file")
 ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -44,10 +44,6 @@ source(system.file("utils/chunk_hdf5.R", package = "pannagram")) # a common code
 
 # Set the number of cores for parallel processing
 num.cores <- opt$cores
-if(num.cores > 1){
-  myCluster <- makeCluster(num.cores, type = "PSOCK")
-  registerDoParallel(myCluster)  
-}
 
 # Reference genome
 ref.name <- opt$ref
@@ -92,9 +88,10 @@ if(length(s.combinations) == 0){
   pokaz('Combinations', s.combinations)  
 }
 
-# ---- Main ----
-flag.for = T
-for(s.comb in s.combinations){
+# ***********************************************************************
+# ---- MAIN program body ----
+
+loop.function <- function(s.comb, echo = T){
   pokaz('Combination', s.comb)
   
   # Get Consensus
@@ -179,7 +176,24 @@ for(s.comb in s.combinations){
   
 }
 
-if(num.cores > 1){
+
+# ***********************************************************************
+# ---- Loop  ----
+
+if(num.cores == 1){
+  
+  for(s.comb in s.combinations){
+    loop.function(s.comb)
+  }
+} else {
+  # Set the number of cores for parallel processing
+  myCluster <- makeCluster(num.cores, type = "PSOCK") 
+  registerDoParallel(myCluster) 
+  
+  foreach(s.comb = s.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
+    tmp = loop.function(s.comb)
+    return(tmp)
+  }
   stopCluster(myCluster)
 }
 

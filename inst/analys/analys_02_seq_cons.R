@@ -33,10 +33,6 @@ source(system.file("utils/chunk_hdf5.R", package = "pannagram"))
 
 # Set the number of cores for parallel processing
 num.cores <- opt$cores
-if(num.cores > 1){
-  myCluster <- makeCluster(num.cores, type = "PSOCK")
-  registerDoParallel(myCluster)  
-}
 
 ref.name <- opt$ref
 if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
