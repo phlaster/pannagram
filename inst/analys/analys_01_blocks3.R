@@ -1,4 +1,4 @@
-# Get positiona for an extra alignment
+# Get syntenic positions
 
 suppressMessages({
   library(foreach)
@@ -6,6 +6,7 @@ suppressMessages({
   library(crayon)
   library(rhdf5)
   library(pannagram)
+  library(optparse)
 })
 
 source(system.file("utils/chunk_hdf5.R", package = "pannagram"))
