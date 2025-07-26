@@ -156,25 +156,30 @@ accessions = unique(df.all$acc)
 
 for(s.comb in unique(df.all$comb)){
   pokaz('Combination', s.comb)
-  i.order = 1:length(accessions)
   
-  # i.order = c(2,  6,  5,  4,  3,  7,  9, 10,  8, 11,  1, 12)
-  # pokaz(i.order)
-  
-  df.tmp = df.all
   df.tmp = df.all[df.all$comb == s.comb,]
-  if(length(unique(df.tmp$acc)) == 1){
+  
+  accessions = unique(df.tmp$acc)
+  if(length(accessions) == 1){
     pokazAttention('Synteny plot can not be generated for combination', s.comb)
     next
+  } else {
+    pokaz('Number of accessions is', length(accessions))
   }
-  df.tmp$acc <- factor(df.tmp$acc, levels = intersect(accessions[i.order], unique(df.tmp$acc)))
+  if(ref.name %in% accessions){
+    accessions = c(ref.name, setdiff(accessions, ref.name))
+  }
+  
+  i.order = 1:length(accessions)
+  
+  df.tmp$acc <- factor(df.tmp$acc, levels = accessions)
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
   
   p = panplot(df.tmp, 
-              accessions = unique(df.tmp$acc), 
-              i.order = length(unique(df.tmp$acc)), 
-              wnd.size=wnd.size) 
+              accessions = accessions, 
+              i.order = i.order, 
+              wnd.size = wnd.size) 
   savePDF(p, path = path.figures, name = paste0('fig_synteny_',s.comb), width = 6, height = 4 / 27 * length(accessions))
 }
 
