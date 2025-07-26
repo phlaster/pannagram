@@ -87,9 +87,9 @@ file.blocks = paste0(path.inter.msa, aln.type, 'syn_blocks', ref.suff,'.rds')
 if(!file.exists(file.blocks)){
   df.all = c()
   for(s.comb in s.combinations){
+    s.comb = '1_2'
     
     pokaz('Combination', s.comb)
-    s.comb = '1_2'
     # --- --- --- --- --- --- --- --- --- --- ---
     
     file.comb.in = paste0(path.features.msa, aln.type, s.comb, ref.suff,'.h5')
@@ -100,6 +100,8 @@ if(!file.exists(file.blocks)){
     processAcc <- function(acc) {
       pokaz('Accession', acc)
       v <- h5read(file.comb.in, paste0(gr.accs.e, acc))
+      
+      save(list = ls(), file = "tmp_workspace_acc.RData")
       
       df.acc <- getBlocks(v, f.split = FALSE)
       df.acc$acc <- acc
