@@ -87,7 +87,6 @@ file.blocks = paste0(path.inter.msa, aln.type, 'syn_blocks', ref.suff,'.rds')
 if(!file.exists(file.blocks)){
   df.all = c()
   for(s.comb in s.combinations){
-    s.comb = '1_2'
     
     pokaz('Combination', s.comb)
     # --- --- --- --- --- --- --- --- --- --- ---
@@ -105,7 +104,6 @@ if(!file.exists(file.blocks)){
       
       df.acc <- getBlocks(v, f.split = FALSE)
       if(nrow(df.acc) == 0) {
-        pokaz('Null!')
         return(NULL) 
       }
       df.acc$acc <- acc
