@@ -57,6 +57,8 @@ s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full
 s.combinations = gsub(aln.type, "", s.combinations)
 s.combinations = gsub(".h5", "", s.combinations)
 
+print(s.combinations)
+
 # pokaz('Reference:', ref.name)
 if(ref.name != ""){
   ref.suff = paste0('_', ref.name)
@@ -64,7 +66,6 @@ if(ref.name != ""){
   pokaz('Reference:', ref.name)
   s.combinations <- s.combinations[grep(ref.suff, s.combinations)]
   s.combinations = gsub(ref.suff, "", s.combinations)
-  
 } else {
   ref.suff = ''
 }
