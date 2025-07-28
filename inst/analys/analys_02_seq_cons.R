@@ -53,15 +53,9 @@ if(!dir.exists(path.chr)) stop('intermediate/chromosomes dir doesn’t exist')
 
 # ---- Combinations of chromosomes query-base to create the alignments ----
 s.pattern <- paste0("^", aln.type, ".*h5")
-pokaz(s.pattern)
-pokaz(path.features.msa)
 s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-print(s.combinations)
 s.combinations = gsub(aln.type, "", s.combinations)
-print(s.combinations)
 s.combinations = gsub(".h5", "", s.combinations)
-
-print(s.combinations)
 
 # pokaz('Reference:', ref.name)
 if(ref.name != ""){
