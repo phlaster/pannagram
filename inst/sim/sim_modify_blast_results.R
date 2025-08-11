@@ -1,7 +1,10 @@
 # Modifier of tblastn results to be correctly processed
 
 # Libs
-library(optparse)
+invisible(suppressMessages({
+  library(optparse)
+  library(pannagram)
+}))
 
 # Define the command-line options
 option_list <- list(
