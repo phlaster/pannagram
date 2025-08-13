@@ -80,43 +80,43 @@ if [ "$run_snp" = true ]; then # -snp
 
     pokaz_message "Step -snp is done!"
 
-    # Pi diversity
-    if [ "$run_snp_pi" = true ]; then # -snp_pi
+    # rm ${path_snp}*log
+fi
 
-        pokaz_stage "Pi diversity."
-        vcf_files=$(find "$path_snp" -type f -name "*.vcf")
-        if [ -z "$vcf_files" ]; then
-            echo "VCF-files are not found in $path_snp!"
-            exit 1
-        fi
 
-        mkdir -p ${path_plots_snp}
+# Pi diversity
+if [ "$run_snp_pi" = true ]; then # -snp_pi
 
-        # Run VCF-tools
-        for vcf_file in $vcf_files; do
-            echo "VCF-tools.."
-            base_name=$(basename "$vcf_file" .vcf)
-            output_file="${path_snp}${base_name}_output"
-            vcftools --vcf "$vcf_file" --site-pi --out "$output_file" &>/dev/null
-            vcftools --vcf "$vcf_file" --extract-FORMAT-info ID --out "$output_file" &>/dev/null
-
-            Rscript $INSTALLED_PATH/analys/analys_04_snp_plot.R \
-                --path.figures ${path_plots_snp} \
-                --file.pi "${output_file}.sites.pi"
-
-            echo "Plink.."
-            plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr &>/dev/null
-
-            Rscript $INSTALLED_PATH/analys/analys_04_snp_dist.R \
-                --path.figures ${path_plots_snp} \
-                --file.pi ${vcf_file} \
-                --path.snp ${path_snp}
-        done
-        pokaz_message "Step -snp_pi is done!"
+    pokaz_stage "Pi diversity."
+    vcf_files=$(find "$path_snp" -type f -name "*.vcf")
+    if [ -z "$vcf_files" ]; then
+        echo "VCF-files are not found in $path_snp!"
+        exit 1
     fi
 
-    # rm ${path_snp}*log
+    mkdir -p ${path_plots_snp}
 
+    # Run VCF-tools
+    for vcf_file in $vcf_files; do
+        echo "VCF-tools.."
+        base_name=$(basename "$vcf_file" .vcf)
+        output_file="${path_snp}${base_name}_output"
+        vcftools --vcf "$vcf_file" --site-pi --out "$output_file" &>/dev/null
+        vcftools --vcf "$vcf_file" --extract-FORMAT-info ID --out "$output_file" &>/dev/null
+
+        Rscript $INSTALLED_PATH/analys/analys_04_snp_plot.R \
+            --path.figures ${path_plots_snp} \
+            --file.pi "${output_file}.sites.pi"
+
+        echo "Plink.."
+        plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr &>/dev/null
+
+        Rscript $INSTALLED_PATH/analys/analys_04_snp_dist.R \
+            --path.figures ${path_plots_snp} \
+            --file.pi ${vcf_file} \
+            --path.snp ${path_snp}
+    done
+    pokaz_message "Step -snp_pi is done!"
 fi
 
 
@@ -210,7 +210,6 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
     rm "$file_sv_big".nin
     rm "$file_sv_big".nhr
     rm "$file_sv_big".nsq
-
 
     pokaz_stage "Plotting SV-Graph..."
     Rscript $INSTALLED_PATH/analys/sv_03_plot_graph.R \
