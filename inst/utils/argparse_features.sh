@@ -25,7 +25,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -h|-help) print_usage;                                          exit 0  ;;
         -cores)   cores="$2";                                           shift 2 ;;
-        -path_in|-path_project) path_project="$2"; required_params+=("path_project");shift 2 ;;
+        -path_in|-path_proj|-path_project) path_project="$2"; required_params+=("path_project");shift 2 ;;
         -ref)         ref_pref="$2";                                    shift 2 ;;
         -blocks)      run_blocks=true;                                  shift 1 ;;
         -seq)         run_seq=true;                                     shift 1 ;;

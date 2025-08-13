@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
         -h|-help )       print_usage_detailed; print_examples; exit 0 ;;
         
         # Required parameters
-        -path_out|-path_project) path_project="$2"; shift 2; required_params+=("path_project") ;;
+        -path_out|-path_proj|-path_project) path_project="$2"; shift 2; required_params+=("path_project") ;;
         -path_in)                path_in="$2"; shift 2; required_params+=("path_in") ;; # path with all genomes in fasta format
 
         -s|-stage|-step) step_start="$2"; shift 2 ;; # first stage to run from, when the stage is not provided - the last interrupted stage withh be re-run
