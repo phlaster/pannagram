@@ -66,12 +66,10 @@ rownames(dist.mx) <- labels
 
 h = hclust(as.dist(dist.mx))
 
-print(1)
 dist.mx = dist.mx[h$order,h$order]
 p = heatplot(dist.mx)
 
-print(2)
-savePDF(h, path=path.figures, name=paste0(file.pi, '_dendro'), width = 7, height = 7)
+savePDF(function() plot(h), path=path.figures, name=paste0(file.pi, '_dendro'), width = 7, height = 7)
 savePDF(p, path=path.figures, name=paste0(file.pi, '_dist'), width = 7, height = 7)
 
 saveRDS(dist.mx, paste0(path.snp, file.pi, '_dist.rds'))
