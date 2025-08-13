@@ -46,7 +46,6 @@ if(!dir.exists(path.figures)) stop('Consensus folder doesn’t exist')
 file.dist = paste0(path.snp, file.pi, '.dist.dist' )
 file.id = paste0(path.snp, sub('.vcf', '_output.ID.FORMAT', file.pi))
 
-
 lines <- readLines(file.dist)
 
 info = strsplit(lines, '\t')
@@ -66,9 +65,12 @@ colnames(dist.mx) <- labels
 rownames(dist.mx) <- labels
 
 h = hclust(as.dist(dist.mx))
+
+print(1)
 dist.mx = dist.mx[h$order,h$order]
 p = heatplot(dist.mx)
 
+print(2)
 savePDF(h, path=path.figures, name=paste0(file.pi, '_dendro'), width = 7, height = 7)
 savePDF(p, path=path.figures, name=paste0(file.pi, '_dist'), width = 7, height = 7)
 
