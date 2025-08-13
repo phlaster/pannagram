@@ -70,7 +70,7 @@ dist.mx = dist.mx[h$order,h$order]
 p = heatplot(dist.mx)
 
 pdf(file.path(path.figures, paste0(file.pi, "_dendro.pdf")), width = 7, height = 7)
-plot(h)
+plot(as.dendrogram(h))
 dev.off()
 
 savePDF(p, path=path.figures, name=paste0(file.pi, '_dist'), width = 7, height = 7)
