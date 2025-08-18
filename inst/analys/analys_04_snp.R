@@ -121,6 +121,10 @@ loop.function <- function(s.comb, echo = T){
     gc()
   }
   
+  if(length(pos.diff) == 0){
+    pokaz('No SNPs were found..')  
+    return(NULL)
+  }
   # Common positions
   pokaz('Round 2: get diffs in common positions..')
   
