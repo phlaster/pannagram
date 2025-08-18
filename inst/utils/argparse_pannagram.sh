@@ -93,6 +93,11 @@ name_mode_pre='PRE'
 name_mode_ref='REF'
 name_mode_msa='MSA'
 
+if [[ "$mode_pre" = "T" && "$mode_ref" = "F" ]]; then
+    pokaz_error "Invalid parameter combination: -ref must be specified when using -pre mode"
+    exit 1
+fi
+
 if [[ "$mode_pre" = "F" && "$mode_ref" = "F"  && -z "$path_ref" ]]; then
     mode_pangen="$name_mode_msa"
 elif [[ "$mode_pre" = "T" && "$mode_ref" = "T" && "$mode_msa" = "F" ]]; then
