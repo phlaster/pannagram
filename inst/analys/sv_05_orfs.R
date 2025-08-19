@@ -66,7 +66,7 @@ sv.seqs = readFasta(file.seqs)
 
 sv.seqs = sv.seqs[nchar(sv.seqs) > len.sv.min]
 
-pokaz('Numer of SVs to analyse is', length(sv.seqs))
+pokaz('Number of SVs to analyse is', length(sv.seqs))
 
 # ***********************************************************************
 # ---- Get ORFs for every SV ----
@@ -81,5 +81,5 @@ for(i.s in 1:length(sv.seqs)){
   orfs = c(orfs, orf.tmp)
 }
 
-pokaz('Numer of ORFs is', length(orfs))
+pokaz('Number of ORFs is', length(orfs))
 writeFasta(orfs, paste0(path.sv, 'sv_big_orfs.fasta'))
