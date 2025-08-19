@@ -153,6 +153,10 @@ if [ "$run_sv_call" = true ]; then # -sv_call|-sv
     pokaz_message "Step -sv is done!"
 fi
 
+run_sv_orf
+if [ "$run_sv_orf" = true ]; then # -sv_orf
+    pokaz_stage "Get ORFs from SVs"
+fi
 
 # Compare SVs with TEs
 # if [ "$run_annogroup" = true ]; then # -annogroup
@@ -196,6 +200,7 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
            
     # fi
     pokaz_message "Blast is done."
+    pokaz_message "Similarity: ${similarity_value}. Coverage: ${coverage_value}"
 
     file_sv_big_on_sv_cover=${file_sv_big%.fasta}_on_sv_cover.rds
     Rscript $INSTALLED_PATH/sim/sim_in_seqs.R \

@@ -104,7 +104,7 @@ res.nest = readRDS(res.cover.file)
 # ---- Make a collapsed graph ----
 pokaz('Make a collapsed graph...')
 
-file.g.content = paste0(path.sv, 'g_content_sim',round(sim.cutoff * 100),'.rds')
+file.g.content = paste0(path.sv, 'g_content_sim', round(sim.cutoff * 100),'.rds')
 
 # remove duplicates in orientations
 if(!file.exists(file.g.content)){

@@ -128,9 +128,6 @@ loop.function <- function(s.comb, echo = T){
   # Common positions
   pokaz('Round 2: get diffs in common positions..')
   
-  if(s.comb == '12_12') save(list = ls(), file = "tmp_workspace_snp.RData")
-  pos = sort(unique(pos.diff))
-  
   snp.matrix = s.pangen[pos]
   snp.val = c()
   for(acc in accessions){
