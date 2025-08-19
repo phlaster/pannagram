@@ -75,7 +75,7 @@ orfs = c()
 for(i.s in 1:length(sv.seqs)){
   s = sv.seqs[i.s]
   ref = orfFinder(s)
-  orf.tmp = ref$orf[nchar(ref$orf) > len.aa.min]
+  orf.tmp = ref$orf[nchar(ref$orf) > len.sv.min / 3]
   if(length(orf.tmp) == 0) next
   names(orf.tmp) = paste(names(s), names(orf.tmp), sep='|')
   orfs = c(orfs, orf.tmp)
