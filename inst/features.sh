@@ -243,14 +243,17 @@ if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
 
         path_simsearch_out="${path_sv}.simsearch/"
         echo "Output ${path_simsearch_out}"
-        simsearch -in_seq "${path_sv}sv_big_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}" -prot
+        # simsearch -in_seq "${path_sv}sv_big_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}" -prot
 
-        # makeblastdb -in ${set_file_prot} -dbtype prot
-        # blastp -db "${set_file_prot}" \
-        #        -query "${path_sv}sv_in_graph_orfs.fasta" \
-        #        -out "${path_sv}blast_sv_orfs_on_set.txt" \
-        #        -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
-        #        -num_threads "${cores}"
+
+        base_set_file_prot="$(basename "$set_file_prot")"
+        makeblastdb -in "$set_file_prot" -dbtype prot -out "${path_simsearch_out}${base_set_file_prot}" > /dev/null
+
+        blastp -db "${path_simsearch_out}${base_set_file_prot}" \
+               -query "${path_sv}sv_big_orfs.fasta" \
+               -out "${path_sv}blast_sv_big_orfs_on_set.txt" \
+               -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
+               -num_threads "${cores}"
     else
         pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
     fi
