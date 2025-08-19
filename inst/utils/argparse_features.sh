@@ -35,8 +35,8 @@ while [ $# -gt 0 ]; do
         -snp_pi)      run_snp_pi=true;                                  shift 1 ;;
         -sv_call|-sv) run_sv_call=true;                                 shift 1 ;;
         -sv_sim)      run_sv_sim=true;      set_file="$2";              shift 2 ;;
-        -sv_orf)      run_sv_orf=true;                                  shift 2 ;;
         -sv_sim_prot) run_sv_sim_prot=true; set_file_prot="$2";         shift 2 ;;
+        -sv_orf)      run_sv_orf=true;                                  shift 2 ;;
         -sv_graph)    run_sv_graph=true;                                shift 1 ;;
         -sim)         similarity_value="$2";                            shift 2 ;;
         -sv_acc)      acc_anal="$2";                                    shift 2 ;;
