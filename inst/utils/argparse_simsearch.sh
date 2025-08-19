@@ -50,7 +50,7 @@ while [ "$1" != "" ]; do
 
         -afterblast ) after_blast_flag=1; shift ;;
         -keepblast )  keep_blast_flag=1;  shift ;;
-        -aa )         use_aa=1;           shift ;;
+        -aa|-prot )   use_aa=1;           shift ;;
 
         -strandfree ) use_strand=F; shift ;;
 
