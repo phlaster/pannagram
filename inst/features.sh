@@ -236,11 +236,11 @@ fi
 # BLAST ORFs against the database
 if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
 
-    if [ -f "${path_sv}/sv_orfs.fasta" ]; then
+    if [ -f "${path_sv}/sv_big_orfs.fasta" ]; then
         pokaz_stage "BLAST on proteins..."
 
         path_simsearch_out="${path_sv}.simsearch/"
-        simsearch -in_seq "${path_sv}sv_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}"
+        simsearch -in_seq "${path_sv}sv_big_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}"
 
         # makeblastdb -in ${set_file_prot} -dbtype prot
         # blastp -db "${set_file_prot}" \
