@@ -153,6 +153,7 @@ if [ "$run_sv_call" = true ]; then # -sv_call|-sv
     pokaz_message "Step -sv is done!"
 fi
 
+# ORFs in SVs
 if [ "$run_sv_orf" = true ]; then # -sv_orf
     pokaz_stage "Get ORFs from SVs"
 
@@ -229,25 +230,29 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
         --path.features.msa ${path_features_msa} \
         --path.sv ${path_sv}
 
-    if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
-
-        if [ -f "${path_sv}/sv_in_graph_orfs.fasta" ]; then
-            pokaz_stage "BLAST on proteins..."
-
-            makeblastdb -in ${set_file_prot} -dbtype prot
-            blastp -db "${set_file_prot}" \
-                   -query "${path_sv}sv_in_graph_orfs.fasta" \
-                   -out "${path_sv}blast_sv_orfs_on_set.txt" \
-                   -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
-                   -num_threads "${cores}"
-        else
-            pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
-        fi
-
-    fi
     pokaz_message "Step -sv_graph is done!"
 fi
 
+# BLAST ORFs against the database
+if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
+
+    if [ -f "${path_sv}/sv_in_graph_orfs.fasta" ]; then
+        pokaz_stage "BLAST on proteins..."
+
+        path_simsearch_out="${path_sv}.simsearch/"
+        simsearch -in_seq "${path_sv}sv_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}"
+
+        # makeblastdb -in ${set_file_prot} -dbtype prot
+        # blastp -db "${set_file_prot}" \
+        #        -query "${path_sv}sv_in_graph_orfs.fasta" \
+        #        -out "${path_sv}blast_sv_orfs_on_set.txt" \
+        #        -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
+        #        -num_threads "${cores}"
+    else
+        pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
+    fi
+
+fi
 
 # Annotation groups
 # if [ "$run_sv_sim" = true ]; then # -sv_sim

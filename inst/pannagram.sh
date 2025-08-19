@@ -1781,7 +1781,4 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 # source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 
-if [ $step_start -eq 0 ]; then
-    # rm -f "$FLAG_DIR"/.*
-    with_level 1 pokaz_message "Script completed successfully"
-fi
+with_level 1 pokaz_message "Script completed successfully"
