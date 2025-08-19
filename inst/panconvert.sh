@@ -215,6 +215,7 @@ if [[ -d "$new_project" ]]; then
 fi
 
 # Check path names
+INSTALLED_PATH=$(Rscript -e "cat(system.file(package = 'pannagram'))")
 source $INSTALLED_PATH/utils/utils_bash.sh
 new_project=$(add_symbol_if_missing "$new_project" "/")
 old_project=$(add_symbol_if_missing "$old_project" "/")
