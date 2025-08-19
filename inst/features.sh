@@ -238,7 +238,6 @@ if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
 
     if [ ! -f "${set_file_prot}" ]; then
         pokaz_error "File with proteins does not exist, provide an existing file."
-        exit 1
     elif [ -f "${path_sv}/sv_big_orfs.fasta" ]; then
         pokaz_stage "BLAST on proteins..."
 
