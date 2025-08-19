@@ -236,7 +236,7 @@ fi
 # BLAST ORFs against the database
 if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
 
-    if [ -f "${path_sv}/sv_in_graph_orfs.fasta" ]; then
+    if [ -f "${path_sv}/sv_orfs.fasta" ]; then
         pokaz_stage "BLAST on proteins..."
 
         path_simsearch_out="${path_sv}.simsearch/"
