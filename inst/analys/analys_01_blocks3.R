@@ -75,9 +75,11 @@ if(ref.name != ""){
 if(length(s.combinations) == 0){
   # save(list = ls(), file = "tmp_workspace_s.RData")
   stop('No Combinations found.')
-
 } else {
   pokaz('Combinations', s.combinations)  
+  if(!checkCombinations(s.combinations)){
+    stop("Wrong combination format.\nPossible hint: check that you have provided the name of the reference genome -ref.")
+  }
 }
 # ***********************************************************************
 # ---- MAIN program body ----

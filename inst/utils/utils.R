@@ -1690,3 +1690,22 @@ commonPrefix <- function(info){
   return(paste0(s.pref, collapse = ''))
 }
 
+#' Check Format of Combinations
+#'
+#' Validates that all elements of a character vector follow the pattern "number_number".
+#'
+#' @param vec A character vector to check.
+#'
+#' @return Logical scalar. `TRUE` if all elements match the pattern, otherwise `FALSE`.
+#' @examples
+#' checkCombinations(c("12_34", "5_67"))   # TRUE
+#' checkCombinations(c("12_34", "ab_c"))    # FALSE
+#' @export
+checkCombinations <- function(vec) {
+  if (!all(sapply(vec, is.character))) {
+    stop('All elements should strings')
+  }
+  pattern <- "^\\d+_\\d+$"
+  all(grepl(pattern, vec))
+}
+
