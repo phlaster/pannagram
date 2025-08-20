@@ -252,7 +252,7 @@ if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
         blastp -db "${path_simsearch_out}${base_set_file_prot}" \
                -query "${path_sv}sv_big_orfs.fasta" \
                -out "${path_sv}blast_sv_big_orfs_on_set.txt" \
-               -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
+               -outfmt "6 qseqid qstart qend sstart send pident length sseqid  qlen slen" \
                -num_threads "${cores}"
     else
         pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
@@ -279,7 +279,7 @@ fi
 
 #     # if [ ! -f "${file_sv_big_on_set}" ]; then
 #         blastn -db "${set_file}" -query "${file_sv_big}" -out "${file_sv_big_on_set}" \
-#            -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
+#            -outfmt "6 qseqid qstart qend sstart send pident length sseqid  qlen slen" \
 #            -perc_identity "${similarity_value}" -num_threads "${cores}"
 #     # fi
 
