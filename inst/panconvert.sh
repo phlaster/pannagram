@@ -140,7 +140,7 @@ while [[ $# -gt 0 ]]; do
         --ln)
             if [[ -n "${copy_mode:-}" ]]; then
                 echo "Error: --ln and --cp cannot be used together." >&2
-                echo "Usage: $0 --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
+                echo "Usage: panconvert --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
                 exit 1
             fi
             link_mode=1
@@ -149,7 +149,7 @@ while [[ $# -gt 0 ]]; do
         --cp)
             if [[ -n "${link_mode:-}" ]]; then
                 echo "Error: --ln and --cp cannot be used together." >&2
-                echo "Usage: $0 --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
+                echo "Usage: panconvert --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
                 exit 1
             fi
             copy_mode=1
@@ -169,14 +169,14 @@ done
 
 # Validate arguments
 if [[ -z "${old_project:-}" || -z "${new_project:-}" ]]; then
-    echo "Usage: $0 --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
+    echo "Usage: panconvert --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
     exit 1
 fi
 
 # Check for exactly one operation mode
 if [[ (-z "${link_mode:-}" && -z "${copy_mode:-}") || (-n "${link_mode:-}" && -n "${copy_mode:-}") ]]; then
     echo "Error: Exactly one of --ln or --cp must be provided." >&2
-    echo "Usage: $0 --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
+    echo "Usage: panconvert --old_project <dir> --new_project <dir> (--ln | --cp)" >&2
     exit 1
 fi
 
@@ -213,6 +213,12 @@ if [[ -d "$new_project" ]]; then
     echo "Remove the directory and run again." >&2
     exit 1
 fi
+
+# Check path names
+INSTALLED_PATH=$(Rscript -e "cat(system.file(package = 'pannagram'))")
+source $INSTALLED_PATH/utils/utils_bash.sh
+new_project=$(add_symbol_if_missing "$new_project" "/")
+old_project=$(add_symbol_if_missing "$old_project" "/")
 
 # Create directory structure
 path_log="${new_project}.logs/"

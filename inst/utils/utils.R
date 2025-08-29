@@ -1193,7 +1193,7 @@ repeatScore <- function(s, wsize = 11, dup.cutoff = 2){
 #' @export
 comb2ref <- function(s.comb){
   pattern <- "^\\d+_\\d+$"
-  if(!grepl(pattern, s.comb)) stop('Something is wrong with the bombinations of chromosomes')
+  if(!grepl(pattern, s.comb)) stop('Something is wrong with the combinations of chromosomes')
   ref.chr = as.numeric(strsplit(s.comb, '_')[[1]][2])
   return(ref.chr)
 }
@@ -1480,9 +1480,9 @@ wndSum <- function(d, wnd.len, echo=T){
 #' 
 #' @author Anna A. Igolkina 
 #' @export
-readBlast <- function(file) {
+readBlast <- function(file, stringsAsFactors=F, header=F) {
   if (any(grepl("^[^#]", readLines(file)))) {
-    return(read.table(file, stringsAsFactors = F,  header = F, comment.char = ""))
+    return(read.table(file, stringsAsFactors = stringsAsFactors,  header = header, comment.char = "", check.names = F))
   } else {
     return(NULL)
   }
@@ -1688,5 +1688,24 @@ commonPrefix <- function(info){
     }
   }
   return(paste0(s.pref, collapse = ''))
+}
+
+#' Check Format of Combinations
+#'
+#' Validates that all elements of a character vector follow the pattern "number_number".
+#'
+#' @param vec A character vector to check.
+#'
+#' @return Logical scalar. `TRUE` if all elements match the pattern, otherwise `FALSE`.
+#' @examples
+#' checkCombinations(c("12_34", "5_67"))   # TRUE
+#' checkCombinations(c("12_34", "ab_c"))    # FALSE
+#' @export
+checkCombinations <- function(vec) {
+  if (!all(sapply(vec, is.character))) {
+    stop('All elements should strings')
+  }
+  pattern <- "^\\d+_\\d+$"
+  all(grepl(pattern, vec))
 }
 

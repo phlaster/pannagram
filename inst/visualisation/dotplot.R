@@ -44,15 +44,17 @@ dotplot <- function(seq1, seq2, wsize, nmatch) {
   result = mxComp(mx1, mx2, wsize, nmatch)
   
   mx2.rc = toupper(seq2mx(seq2.rc, wsize))
+  
   result.rc = mxComp(mx1, mx2.rc, wsize, nmatch)
   result.rc$values = -result.rc$values
   result.rc$col = length(seq2) - result.rc$col - wsize + 2
   result = rbind(result.rc, result)
-  result = rbind(result, data.frame(row=1, col=length(seq2)-1, values=0))
+  result = rbind(result, data.frame(row = 1, col = length(seq2) - wsize + 1, values=0))
   
-  len1 = length(seq1)
-  len2 = length(seq2)
+  len1 = length(seq1) - wsize + 2
+  len2 = length(seq2) - wsize + 2
   
+  pokaz(len1, len2, max(result$row), max(result$col))
   p = invisible(
         ggplot(result, aes(x = row, y = col, fill = values, color = values)) +
         geom_tile(width = 1, height = 1, linewidth = 0.5) +
@@ -60,14 +62,15 @@ dotplot <- function(seq1, seq2, wsize, nmatch) {
         # xlim(c(0, len1)) +
         # ylim(c(0, len2)) +
         theme_minimal() + coord_fixed() +
-        scale_x_continuous(expand = c(0, 0), limits = c(0, length(seq1))) + 
-        scale_y_continuous(expand = c(0, 0), limits = c(0, length(seq2))) +
+        scale_x_continuous(expand = c(0, 0), limits = c(0, len1)) + 
+        scale_y_continuous(expand = c(0, 0), limits = c(0, len2)) +
         scale_fill_gradient2(low = "#CE1F6A", mid = "white", high = "#27374D",
                              breaks = c(-wsize, 0, wsize)) +
         scale_color_gradient2(low = "#CE1F6A", mid = "white", high = "#27374D",
                               breaks = c(-wsize, 0, wsize)) +
         theme(panel.border = element_rect(colour = "grey", fill = NA, size = 1)) +
-        guides(fill = FALSE, color = FALSE) + 
+        # guides(fill = FALSE, color = FALSE) + 
+        theme(legend.position = "none") +
         annotate('text', x = len1/2, y = len2, 
                  label = paste('(',wsize,',',nmatch, ')', sep = ''), 
                  vjust = 1.2, hjust = 0.5)
@@ -121,7 +124,7 @@ dotprot <- function(seq1, seq2, wsize, nmatch) {
                            breaks = c(-wsize, 0, wsize)) +
       scale_color_gradient2(low = "white", mid = "#4C7B8B", high = "#27374D",
                             breaks = c(-wsize, 0, wsize)) +
-      theme(panel.border = element_rect(colour = "grey", fill = NA, size = 1)) +
+      theme(panel.border = element_rect(colour = "grey", fill = NA, linewidth = 1)) +
       guides(fill = FALSE, color = FALSE) + 
       annotate('text', x = len1/2, y = len2, 
                label = paste('(',wsize,',',nmatch, ')', sep = ''), 

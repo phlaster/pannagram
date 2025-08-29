@@ -1,6 +1,6 @@
 #!/bin/bash
 
-START_TIME=$(date +%s.%N)
+START_TIME=$(date +%s)
 
 CONDAENV_NAME="pannagram"
 PACKAGE_NAME="pannagram"
@@ -13,6 +13,7 @@ else
 fi
 
 echo -e "[4] \033[34mPannagram documentation installation\033[0m"
+rm -rf man/
 Rscript -e "
 suppressMessages(devtools::document(quiet=TRUE))
 "
@@ -20,7 +21,7 @@ echo -e "[5] \033[34mPannagram R package installation\033[0m"
 Rscript -e "
 suppressMessages(devtools::install(quiet=TRUE))
 " && {
-  END_TIME=$(date +%s.%N)
-  ELAPSED_TIME=$(awk "BEGIN {printf \"%.1f\", $END_TIME - $START_TIME}")
+  END_TIME=$(date +%s)
+  ELAPSED_TIME=$((END_TIME - START_TIME))
   echo -e "\033[32mUser mode: Package $PACKAGE_NAME check and (re)installation process completed in $ELAPSED_TIME seconds.\033[0m"
 }

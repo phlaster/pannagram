@@ -6,7 +6,8 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-aln_type='msa_'
+aln_type=''
+ref_pref=''
 run_blocks=false
 run_seq=false
 run_aln=false
@@ -17,6 +18,7 @@ run_sv_sim=false
 run_sv_sim_prot=false
 run_sv_graph=false
 run_annogroup=false
+run_sv_orf=false
 
 required_params=()
 
@@ -24,7 +26,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -h|-help) print_usage;                                          exit 0  ;;
         -cores)   cores="$2";                                           shift 2 ;;
-        -path_in|-path_project) path_project="$2"; required_params+=("path_project");shift 2 ;;
+        -path_in|-path_proj|-path_project) path_project="$2"; required_params+=("path_project");shift 2 ;;
         -ref)         ref_pref="$2";                                    shift 2 ;;
         -blocks)      run_blocks=true;                                  shift 1 ;;
         -seq)         run_seq=true;                                     shift 1 ;;
@@ -34,6 +36,7 @@ while [ $# -gt 0 ]; do
         -sv_call|-sv) run_sv_call=true;                                 shift 1 ;;
         -sv_sim)      run_sv_sim=true;      set_file="$2";              shift 2 ;;
         -sv_sim_prot) run_sv_sim_prot=true; set_file_prot="$2";         shift 2 ;;
+        -sv_orf)      run_sv_orf=true;                                  shift 1 ;;
         -sv_graph)    run_sv_graph=true;                                shift 1 ;;
         -sim)         similarity_value="$2";                            shift 2 ;;
         -sv_acc)      acc_anal="$2";                                    shift 2 ;;
@@ -52,13 +55,31 @@ for param in "${required_params[@]}"; do
     fi
 done
 
-if [[ "$run_snp_pi" == true && "$run_snp" == false ]]; then
-    pokaz_error "Error: -snp_pi won't run unless -snp flag is used"
-    exit 1
-fi
+# if [[ "$run_snp_pi" == true && "$run_snp" == false ]]; then
+#     pokaz_error "Error: -snp_pi won't run unless -snp flag is used"
+#     exit 1
+# fi
 
 cores="${cores:-1}"
 acc_anal="${acc_anal:-NULL}"
-ref_pref="${ref_pref:-NULL}"
 
 path_project=$(add_symbol_if_missing "$path_project" "/")
+
+if [ -z "$ref_pref" ]; then
+  ref_pref="NULL"
+else
+    if [[ -z "$aln_type" || "$aln_type" == "ref_" ]]; then
+      aln_type="ref_"
+    else
+      pokaz_error "Error: aln_type is set to '$aln_type', but should be ref_"
+      exit 1
+    fi
+fi
+
+# Setup the alignment type
+if [ -z "$aln_type" ]; then
+  aln_type="msa_"  # Default
+fi
+
+
+

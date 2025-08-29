@@ -1,12 +1,12 @@
-# Get positiona for an extra alignment
+# Get syntenic positions
 
 suppressMessages({
   library(foreach)
   library(doParallel)
-  library(optparse)
   library(crayon)
   library(rhdf5)
   library(pannagram)
+  library(optparse)
 })
 
 source(system.file("utils/chunk_hdf5.R", package = "pannagram"))
@@ -36,9 +36,7 @@ ref.name <- opt$ref
 num.cores <- opt$cores
 wnd.size <- opt$wnd.size
 
-
 if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
-
 
 path.features.msa <- opt$path.features.msa
 if(!dir.exists(path.features.msa)) stop('features/msa dir doesn’t exist')
@@ -53,6 +51,7 @@ if(!dir.exists(path.figures)) stop('Consensus folder doesn’t exist')
 
 # ---- Combinations of chromosomes query-base to create the alignments ----
 s.pattern <- paste0("^", aln.type, ".*h5")
+# pokaz(aln.type)
 s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
 # pokaz(s.combinations)
 s.combinations = gsub(aln.type, "", s.combinations)
@@ -76,9 +75,11 @@ if(ref.name != ""){
 if(length(s.combinations) == 0){
   # save(list = ls(), file = "tmp_workspace_s.RData")
   stop('No Combinations found.')
-
 } else {
   pokaz('Combinations', s.combinations)  
+  if(!checkCombinations(s.combinations)){
+    stop("Wrong combination format.\nPossible hint: check that you have provided the name of the reference genome -ref.")
+  }
 }
 # ***********************************************************************
 # ---- MAIN program body ----
@@ -89,8 +90,7 @@ if(!file.exists(file.blocks)){
   df.all = c()
   for(s.comb in s.combinations){
     
-    i.chr = as.numeric(strsplit(s.comb, '_')[[1]][1])
-    pokaz('Chromosome', i.chr)
+    pokaz('Combination', s.comb)
     # --- --- --- --- --- --- --- --- --- --- ---
     
     file.comb.in = paste0(path.features.msa, aln.type, s.comb, ref.suff,'.h5')
@@ -98,23 +98,36 @@ if(!file.exists(file.blocks)){
     groups = h5ls(file.comb.in)
     accessions = groups$name[groups$group == gr.accs.b]
     
-    myCluster <- makeCluster(num.cores, type = "PSOCK") 
-    registerDoParallel(myCluster) 
-    
-    df = foreach(acc = accessions, .packages = c('rhdf5', 'crayon', 'pannagram'), .combine = rbind) %dopar% {
+    processAcc <- function(acc) {
       pokaz('Accession', acc)
-      v = h5read(file.comb.in, paste0(gr.accs.e, acc))
+      v <- h5read(file.comb.in, paste0(gr.accs.e, acc))
       
-      df.acc = getBlocks(v, f.split = F)
-      df.acc$acc = acc
-      df.acc$chr = i.chr
+      save(list = ls(), file = "tmp_workspace_acc.RData")
       
-      df.acc
+      df.acc <- getBlocks(v, f.split = FALSE)
+      if(nrow(df.acc) == 0) {
+        return(NULL) 
+      }
+      df.acc$acc <- acc
+      df.acc$comb <- s.comb
+      
+      return(df.acc)
+    }
+    
+    if (num.cores == 1) {
+      df <- do.call(rbind, lapply(accessions, processAcc))
+    } else {
+      myCluster <- makeCluster(num.cores, type = "PSOCK") 
+      registerDoParallel(myCluster) 
+      
+      df <- foreach(acc = accessions, .packages = c('rhdf5', 'crayon', 'pannagram'), .combine = rbind) %dopar% {
+        processAcc(acc)
+      }
+      stopCluster(myCluster)
     }
     
     df.all = rbind(df.all, df)
     
-    stopCluster(myCluster)
     gc()
     
   }
@@ -128,6 +141,8 @@ if(!file.exists(file.blocks)){
   df.all$pan.b[idx.dir] = df.all$pan.e[idx.dir]
   df.all$pan.e[idx.dir] = tmp
   
+  # save(list = ls(), file = "tmp_workspace_synblocks_test.RData")
+  
   saveRDS(df.all, file.blocks)  
 } else {
   pokaz("File with blocks was generated in advance", file.blocks)
@@ -140,22 +155,34 @@ if(!file.exists(file.blocks)){
 
 pokaz("Plots...")
 accessions = unique(df.all$acc)
-n.chr = max(df.all$chr)
 
-for(i.chr in 1:n.chr){
-  pokaz('Chromosome', i.chr)
+for(s.comb in unique(df.all$comb)){
+  pokaz('Combination', s.comb)
+  
+  df.tmp = df.all[df.all$comb == s.comb,]
+  
+  accessions = unique(df.tmp$acc)
+  if(length(accessions) == 1){
+    pokazAttention('Synteny plot can not be generated for combination', s.comb)
+    next
+  } else {
+    pokaz('Number of accessions is', length(accessions))
+  }
+  if(ref.name %in% accessions){
+    accessions = c(ref.name, setdiff(accessions, ref.name))
+  }
+  
   i.order = 1:length(accessions)
   
-  # i.order = c(2,  6,  5,  4,  3,  7,  9, 10,  8, 11,  1, 12)
-  # pokaz(i.order)
-  
-  df.tmp = df.all
-  df.tmp$acc <- factor(df.tmp$acc, levels = accessions[i.order])
+  df.tmp$acc <- factor(df.tmp$acc, levels = accessions)
   
   # save(list = ls(), file = "tmp_workspace_blocks.RData")
   
-  p = panplot(df.tmp, i.chr, accessions = accessions, i.order = i.order, wnd.size=wnd.size) 
-  savePDF(p, path = path.figures, name = paste0('fig_synteny_chr',i.chr), width = 6, height = 4 / 27 * length(accessions))
+  p = panplot(df.tmp, 
+              accessions = accessions, 
+              i.order = i.order, 
+              wnd.size = wnd.size) 
+  savePDF(p, path = path.figures, name = paste0('fig_synteny_',s.comb), width = 6, height = 4 / 27 * length(accessions))
 }
 
 

@@ -73,21 +73,6 @@ for(f in files.aln){
 pokaz('Accessions:', accessions)
 
 # ***********************************************************************
-# ---- Test ----
-
-# ref = 'GCA_002079055.1'
-# path.aln = "~/Library/CloudStorage/OneDrive-Personal/iglab/projects/pannagram_meta/yeast_wild/alignment/alignments_GCA_002079055.1/"
-# path.chr = "~/Library/CloudStorage/OneDrive-Personal/iglab/projects/pannagram_meta/yeast_wild/alignment/chromosomes/"
-# acc = "GCA_002079175.1"
-# 
-# 
-# ref = 'MN47'
-# acc = '1741'
-# path.aln = "~/Library/CloudStorage/OneDrive-Personal/iglab/projects/pannagram_meta/arabidopsis/alignment/"
-# path.chr = "~/Library/CloudStorage/OneDrive-Personal/iglab/projects/pannagram_meta/arabidopsis/chromosomes/"
-
-
-# ***********************************************************************
 # ---- Variables ----
 
 file.ref.len = paste0(path.chr, ref, '_chr_len.txt', collapse = '')

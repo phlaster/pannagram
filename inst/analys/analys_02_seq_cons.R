@@ -13,43 +13,29 @@ suppressMessages({
 args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
-  make_option(c("--ref.pref"),    type = "character", default = NULL, help = "prefix of the reference file"),
-  make_option(c("--path.chr"),    type = "character", default = NULL, help = "path to directory with chromosomes"),
-  make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
+  make_option("--ref",               type = "character", default = "",   help = "Prefix of the reference file"),
+  make_option("--path.chr",          type = "character", default = NULL, help = "path to directory with chromosomes"),
+  make_option("--path.seq",          type = "character", default = NULL, help = "Path to seq dir"),
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
-  make_option(c("-c", "--cores"), type = "integer",   default = 1,    help = "number of cores to use for parallel processing"),
-  make_option(c("--aln.type"),    type = "character", default = NULL, help = "type of alignment ('msa_', 'comb_', 'extra1_', etc)")
+  make_option("--cores",             type = "integer",   default = 1,    help = "number of cores to use for parallel processing"),
+  make_option("--aln.type",          type = "character", default = NULL, help = "type of alignment ('msa_', 'comb_', 'extra1_', etc)")
 );
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser, args = args);
 
-
 path.seq <- opt$path.seq
 if (!dir.exists(path.seq)) stop(paste0('No path.seq dir found!'))
 
-
 source(system.file("utils/chunk_hdf5.R", package = "pannagram"))
-
 
 # ***********************************************************************
 
 # Set the number of cores for parallel processing
 num.cores <- opt$cores
-if(num.cores > 1){
-  myCluster <- makeCluster(num.cores, type = "PSOCK")
-  registerDoParallel(myCluster)  
-}
 
-# Reference genome
-if (is.null(opt$ref.pref) || (opt$ref.pref == "NULL")) {
-  ref.pref <- ""
-  ref.suff = ""
-} else {
-  ref.pref <- opt$ref.pref
-  ref.suff <- paste0('_ref_', ref.pref)
-}
-
+ref.name <- opt$ref
+if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
 
 # Alignment prefix
 if (!is.null(opt$aln.type)) {
@@ -65,25 +51,33 @@ if(!dir.exists(path.features.msa)) stop('features/msa dir doesn’t exist')
 path.chr <- opt$path.chr
 if(!dir.exists(path.chr)) stop('intermediate/chromosomes dir doesn’t exist')
 
-
 # ---- Combinations of chromosomes query-base to create the alignments ----
+s.pattern <- paste0("^", aln.type, ".*h5")
+s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
+s.combinations = gsub(aln.type, "", s.combinations)
+s.combinations = gsub(".h5", "", s.combinations)
 
-s.pattern <- paste0("^", aln.type, ".*", ref.suff, "\\.h5")
-# pokaz(s.pattern)
-
-# pokaz('Consensus folder', path.features.msa)
-files <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-# pokaz(files)
-
-pref.combinations = gsub(aln.type, "", files)
-pref.combinations <- sub(ref.suff, "", pref.combinations)
-pref.combinations <- sub(".h5", "", pref.combinations)
-
-if(length(pref.combinations) == 0){
-  stop('No Combinations found.')
+# pokaz('Reference:', ref.name)
+if(ref.name != ""){
+  ref.suff = paste0('_', ref.name)
+  
+  pokaz('Reference:', ref.name)
+  s.combinations <- s.combinations[grep(ref.suff, s.combinations)]
+  s.combinations = gsub(ref.suff, "", s.combinations)
 } else {
-  pokaz('Combinations', pref.combinations)  
+  ref.suff = ''
 }
+
+if(length(s.combinations) == 0){
+  # save(list = ls(), file = "tmp_workspace_s.RData")
+  stop('No Combinations found.')
+  
+} else {
+  pokaz('Combinations', s.combinations)  
+}
+
+
+# ---- Variables ----
 
 s.nts = c('A', 'C', 'G', 'T', '-')
 
@@ -93,7 +87,6 @@ s.nts = c('A', 'C', 'G', 'T', '-')
 loop.function <- function(s.comb, echo = T){
 # tmp = foreach(s.comb = pref.combinations, .packages=c('rhdf5', 'crayon'))  %dopar% {  # which accession to use
 # # for(s.comb in pref.combinations){
-  
   pokaz('* Combination', s.comb)
   
   # Get accessions
@@ -101,10 +94,13 @@ loop.function <- function(s.comb, echo = T){
   
   groups = h5ls(file.comb)
   accessions = groups$name[groups$group == gr.accs.b]
+  if(ref.name %in% accessions){
+    accessions = c(ref.name, setdiff(accessions, ref.name))
+  }
   n.acc = length(accessions)
   
   # File with sequences
-  file.seq = paste0(path.seq, 'seq_', s.comb,ref.suff,'.h5')
+  file.seq = paste0(path.seq, 'seq_', s.comb, ref.suff,'.h5')
   if (file.exists(file.seq)) file.remove(file.seq)
   h5createFile(file.seq)
   h5createGroup(file.seq, gr.accs.e)
@@ -120,7 +116,14 @@ loop.function <- function(s.comb, echo = T){
       mx.consensus = matrix(0, nrow = length(v), ncol = length(s.nts), dimnames = list(NULL, s.nts))
     }
     
-    q.chr = strsplit(s.comb, '_')[[1]][1]
+    if(acc == ref.name){
+      q.chr = strsplit(s.comb, '_')[[1]][2]
+    } else {
+      q.chr = strsplit(s.comb, '_')[[1]][1]  
+    }
+    
+    pokaz('Accession', acc, 'Chromosome', q.chr)
+    
     file.chr = paste0(path.chr, acc, '_chr', q.chr, '.fasta')
     if(!file.exists(file.chr)){
       stop(paste0('Chromosomal file was not found', file.chr))
@@ -128,6 +131,8 @@ loop.function <- function(s.comb, echo = T){
     genome = readFasta(file.chr)
     genome = seq2nt(genome)
     genome = toupper(genome)
+    
+    if(max(abs(v)) > length(genome)) stop('Length of the genome is shorter than the idex involded')
   
     s = rep('-', length(v))
     idx.plus = (v > 0)
@@ -151,7 +156,7 @@ loop.function <- function(s.comb, echo = T){
     
     rmSafe(v)
     rmSafe(v.na)
-    # rmSafe(genome)
+    rmSafe(genome)
     rmSafe(s)
     rmSafe(idx.plus)
     rmSafe(idx.mins)
@@ -166,8 +171,7 @@ loop.function <- function(s.comb, echo = T){
   # ---- Consensus sequence ----
   pokaz('Prepare consensus fasta-sequence')
   i.chr = comb2ref(s.comb)
-  file.seq.cons = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')
-  
+  file.seq.cons = paste0(path.seq, 'seq_cons_', s.comb, ref.suff, '.fasta')
   
   n = nrow(mx.consensus)
   s.cons = rep('N', n)
@@ -199,7 +203,7 @@ loop.function <- function(s.comb, echo = T){
 
 if(num.cores == 1){
   
-  for(s.comb in pref.combinations){
+  for(s.comb in s.combinations){
     loop.function(s.comb)
   }
 } else {
@@ -207,7 +211,7 @@ if(num.cores == 1){
   myCluster <- makeCluster(num.cores, type = "PSOCK") 
   registerDoParallel(myCluster) 
   
-  foreach(s.comb = pref.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
+  foreach(s.comb = s.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
     tmp = loop.function(s.comb)
     return(tmp)
   }

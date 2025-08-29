@@ -1,3 +1,38 @@
+#' Determine Paths to MSA and Sequence Folders
+#'
+#' This function determines the paths to the MSA and sequence directories
+#' based on whether the input is from Pannagram v1.1 or v2.X.
+#'
+#' @param path.proj A character string specifying the path to the project folder (for Pannagram v2.X).
+#'        Required unless using output from Pannagram v1.1.
+#' @param dot.args A list of additional arguments. If `path.msa` is present,
+#'        it indicates usage of output from Pannagram v1.1.
+#'
+#' @return A list with two character elements: `path.msa` and `path.seq`, indicating the
+#'         paths to the MSA and sequence directories, respectively.
+getPannagramPaths <- function(path.proj = NULL, dot.args = list()) {
+  if ("path.msa" %in% names(dot.args)) {
+    pokazAttention("You are working with output of Pannagram v1.1")
+    if (!is.null(path.proj)) stop("Path to the project folder should be provided only for Pannagram v2.X")
+    path.msa <- dot.args$path.msa
+    path.seq <- file.path(path.msa, "seq")
+  } else if ("path.cons" %in% names(dot.args)) {
+    pokazAttention("You are working with output of Pannagram v1.1")
+    if (!is.null(path.proj)) stop("Path to the project folder should be provided only for Pannagram v2.X")
+    path.msa <- dot.args$path.cons
+    path.seq <- file.path(path.msa, "seq")
+  } else {
+    if (is.null(path.proj)) stop("Path to the project folder must be provided!")
+    path.msa <- file.path(path.proj, "features", "msa")
+    path.seq <- file.path(path.proj, "features", "seq")
+  }
+  path.msa = paste0(path.msa, '/')
+  path.seq = paste0(path.seq, '/')
+  return(list(path.msa = path.msa, path.seq = path.seq))
+}
+
+
+
 #' Extract a subregion from an alignment matrix
 #'
 #' This function extracts a region from a multiple sequence alignment (MSA)
@@ -35,18 +70,9 @@ cutAln <- function(acc, i.chr, p.beg, p.end,
   
   # --- Determine Pannagram version and corresponding paths ---
   dot.args <- list(...)
-  if ("path.msa" %in% names(dot.args)) {
-    pokazAttention("You are working with output of Pannagram v1.1")
-    if (!is.null(path.proj)) stop("Path to the project folder should be provided only for Pannagram v2.X")
-    path.msa <- dot.args$path.msa
-    path.seq <- file.path(path.msa, "seq")
-    pannagram.version <- 1
-  } else {
-    pannagram.version <- 2
-    if (is.null(path.proj)) stop("Path to the project folder must be provided!")
-    path.msa <- file.path(path.proj, "features", "msa")
-    path.seq <- file.path(path.proj, "features", "seq")
-  }
+  pannagram.paths = getPannagramPaths(path.proj, dot.args)
+  path.msa = pannagram.paths$path.msa
+  path.seq = pannagram.paths$path.seq
   
   # --- Construct file suffix and MSA file path ---
   ref.suff <- if (ref.acc == '') '' else paste0('_', ref.acc)

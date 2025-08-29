@@ -182,7 +182,7 @@ if [ "$mode_rearrange" = true ]; then
 
     # Path with alignments
     shopt -s nullglob
-    matches=("${path_project}.intermediate"/alignments_*)
+    matches=("${path_project}.intermediate/alignments/"*)
     shopt -u nullglob
 
     # Handle number of matches

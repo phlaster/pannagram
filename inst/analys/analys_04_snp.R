@@ -15,11 +15,11 @@ args = commandArgs(trailingOnly=TRUE)
 
 option_list = list(
   make_option("--path.features.msa", type = "character", default = NULL, help = "Path to msa dir (features)"),
-  make_option("--path.snp", type = "character", default = NULL, help = "Path to snp dir"),
-  make_option("--path.seq", type = "character", default = NULL, help = "Path to seq dir"),
-  make_option(c("-c", "--cores"), type = "integer", default = 1,       help = "number of cores to use for parallel processing"),
-  make_option(c("--aln.type"),    type="character", default="default", help="type of alignment ('msa_', 'comb_', 'v_', etc)"),
-  make_option(c("--ref.pref"),    type="character", default=NULL,      help="prefix of the reference file")
+  make_option("--path.snp",          type = "character", default = NULL, help = "Path to snp dir"),
+  make_option("--path.seq",          type = "character", default = NULL, help = "Path to seq dir"),
+  make_option("--cores",             type = "integer", default = 1,       help = "number of cores to use for parallel processing"),
+  make_option("--aln.type",          type="character", default="default", help="type of alignment ('msa_', 'comb_', 'v_', etc)"),
+  make_option("--ref",               type="character", default=NULL,      help="prefix of the reference file")
 ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -44,19 +44,10 @@ source(system.file("utils/chunk_hdf5.R", package = "pannagram")) # a common code
 
 # Set the number of cores for parallel processing
 num.cores <- opt$cores
-if(num.cores > 1){
-  myCluster <- makeCluster(num.cores, type = "PSOCK")
-  registerDoParallel(myCluster)  
-}
 
 # Reference genome
-if (is.null(opt$ref.pref) || (opt$ref.pref == "NULL")) {
-  ref.pref <- ""
-  ref.suff = ""
-} else {
-  ref.pref <- opt$ref.pref
-  ref.suff <- paste0('_ref_', ref.pref)
-}
+ref.name <- opt$ref
+if(ref.name == "NULL" || is.null(ref.name)) ref.name <- ''
 
 # Alignment prefix
 if (!is.null(opt$aln.type)) {
@@ -72,29 +63,40 @@ path.features.msa <- if (!is.null(opt$path.features.msa)) opt$path.features.msa 
 if(!dir.exists(path.features.msa)) stop(paste('The consensus folder does not exist:', path.features.msa))
 
 # ---- Combinations of chromosomes query-base to create the alignments ----
+s.pattern <- paste0("^", aln.type, ".*h5")
+s.combinations <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
+s.combinations = gsub(aln.type, "", s.combinations)
+s.combinations = gsub(".h5", "", s.combinations)
 
-s.pattern <- paste0("^", aln.type, ".*", ref.suff, "\\.h5")
-
-# pokaz('Consensus folder', path.cons)
-files <- list.files(path = path.features.msa, pattern = s.pattern, full.names = FALSE)
-
-pref.combinations = gsub(aln.type, "", files)
-pref.combinations <- sub(ref.suff, "", pref.combinations)
-pref.combinations <- sub(".h5", "", pref.combinations)
-
-if(length(pref.combinations) == 0){
-  stop('No Combinations found.')
+# pokaz('Reference:', ref.name)
+if(ref.name != ""){
+  ref.suff = paste0('_', ref.name)
+  
+  pokaz('Reference:', ref.name)
+  s.combinations <- s.combinations[grep(ref.suff, s.combinations)]
+  s.combinations = gsub(ref.suff, "", s.combinations)
+  
 } else {
-  pokaz('Combinations', pref.combinations)  
+  ref.suff = ''
 }
 
-# ---- Main ----
-flag.for = T
-for(s.comb in pref.combinations){
+if(length(s.combinations) == 0){
+  # save(list = ls(), file = "tmp_workspace_s.RData")
+  stop('No Combinations found.')
+  
+} else {
+  pokaz('Combinations', s.combinations)  
+}
+
+# ***********************************************************************
+# ---- MAIN program body ----
+
+loop.function <- function(s.comb, echo = T){
+  pokaz('Combination', s.comb)
   
   # Get Consensus
   i.chr = comb2ref(s.comb)
-  file.seq.cons = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')
+  file.seq.cons = paste0(path.seq, 'seq_cons_', s.comb, ref.suff, '.fasta')
   s.pangen = readFastaMy(file.seq.cons)
   s.pangen.name = names(s.pangen)[1]
   s.pangen = seq2nt(s.pangen)
@@ -119,9 +121,12 @@ for(s.comb in pref.combinations){
     gc()
   }
   
+  if(length(pos.diff) == 0){
+    pokaz('No SNPs were found..')  
+    return(NULL)
+  }
   # Common positions
   pokaz('Round 2: get diffs in common positions..')
-  pos = sort(unique(pos.diff))
   
   snp.matrix = s.pangen[pos]
   snp.val = c()
@@ -157,7 +162,12 @@ for(s.comb in pref.combinations){
   # Create the VCF-file for the first accession, the main reference.
   file.comb = paste0(path.features.msa, aln.type, s.comb, ref.suff, '.h5')
   # pokaz(file.comb)
-  acc = accessions[1]
+  if(ref.name != ''){
+    acc = ref.name
+  } else {
+    acc = accessions[1]  
+  }
+  
   pos.acc = h5read(file.comb, paste0(gr.accs.e, acc))
   pos.acc = pos.acc[pos]
   snp.val.acc = snp.val[pos.acc != 0,,drop=F]
@@ -169,7 +179,24 @@ for(s.comb in pref.combinations){
   
 }
 
-if(num.cores > 1){
+
+# ***********************************************************************
+# ---- Loop  ----
+
+if(num.cores == 1){
+  
+  for(s.comb in s.combinations){
+    loop.function(s.comb)
+  }
+} else {
+  # Set the number of cores for parallel processing
+  myCluster <- makeCluster(num.cores, type = "PSOCK") 
+  registerDoParallel(myCluster) 
+  
+  foreach(s.comb = s.combinations, .packages=c('rhdf5', 'crayon', 'pannagram'))  %dopar% { 
+    tmp = loop.function(s.comb)
+    return(tmp)
+  }
   stopCluster(myCluster)
 }
 

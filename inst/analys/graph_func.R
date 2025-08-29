@@ -270,8 +270,8 @@ getGraphFromBlast <- function(bl.res = NULL,
   graph.mutual <- igraph::simplify(igraph::make_graph(t(edges.mutual), directed = T))
   graph.mutual.comp <- igraph::components(graph.mutual)
   
-  nodes.mutual =     data.frame(node = paste0('N', graph.mutual.comp$membership), 
-                                name = names(graph.mutual.comp$membership))
+  nodes.mutual = data.frame(node = paste0('N', graph.mutual.comp$membership), 
+                            name = names(graph.mutual.comp$membership))
   if(length(names.rest) > 0){
     nodes.rest = data.frame(node = paste('R', (1:length(names.rest)), sep = ''), 
                             name = names.rest)  
@@ -331,7 +331,7 @@ getGraphFromBlast <- function(bl.res = NULL,
 #'
 refineDirectEdges <- function(edges.compact, echo = T){
   g = igraph::make_graph(t(edges.compact), directed = TRUE)
-  E(g)$name <- paste(edges.compact[,1], edges.compact[,2], sep = '-')
+  igraph::E(g)$name <- paste(edges.compact[,1], edges.compact[,2], sep = '-')
   
   # Find nodes, which should be kept with all their edges and delete them from the graph
   nodes.keep = c()
@@ -339,7 +339,7 @@ refineDirectEdges <- function(edges.compact, echo = T){
   while(length(nodes.keep) != n.nodes.keep){
     n.nodes.keep = length(nodes.keep)
     # print(n.nodes.keep)
-    print(vcount(g))
+    print(igraph::vcount(g))
     
     deg.in <- igraph::degree(g, mode = "in")
     deg.out <- igraph::degree(g, mode = "out")
@@ -347,7 +347,7 @@ refineDirectEdges <- function(edges.compact, echo = T){
     tails = names(deg.in)[((deg.in + deg.out) == 1) & ((deg.in * deg.out) == 0) ]
     
     nodes.keep = c(nodes.keep, tails)
-    g <- delete_vertices(g, tails)
+    g <- igraph::delete_vertices(g, tails)
   }
   
   # Remove connected components with size 1 and keep node names
@@ -355,7 +355,7 @@ refineDirectEdges <- function(edges.compact, echo = T){
   id.single = which(g.comp$csize == 1)
   nodes.single = names(g.comp$membership)[g.comp$membership %in% id.single]
   nodes.keep = c(nodes.keep, nodes.single)
-  g <- delete_vertices(g, nodes.single)
+  g <- igraph::delete_vertices(g, nodes.single)
   
   # Refine each connected component
   g.comp <- igraph::components(g)

@@ -27,6 +27,8 @@ heatplot <- function(tbl,
                      fill.lab=NULL,
                      cord.fix = F,
                      add.label = F,
+                     show.legend = T,
+                     make.binary = F,
                      to.norm = 'none',
                      ynames=T,
                      xnames=T
@@ -67,11 +69,16 @@ heatplot <- function(tbl,
   } else if(tbl.class != 'matrix'){
     stop('Class should be table/data.frame/matrix.')
   }
+
   
   df <- reshape2::melt(tbl)
   df$Var1 = factor(df$Var1)
   df$Var2 = factor(df$Var2)
   df$label = df$value
+  
+  if(make.binary){
+    df$value = (df$value != 0) * 1
+  }
   
   if(to.norm == 'row'){
     for(tmp in unique(df$Var1)){
@@ -118,6 +125,9 @@ heatplot <- function(tbl,
       axis.text.x = if (xnames) element_text() else element_blank()
     )
   
+  if(!show.legend){
+    p = p + theme(legend.position = "none")
+  }
   
   return(p)
 }

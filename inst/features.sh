@@ -8,14 +8,16 @@ source "$INSTALLED_PATH/utils/help_features.sh"
 source "$INSTALLED_PATH/utils/argparse_features.sh" "$@"
 source "$INSTALLED_PATH/utils/chunk_paths.sh" # requires path_project variable
 
+check_dir ${path_project}
 
 # General alignment processing
 if [ "$run_blocks" = true ]; then # -blocks
     pokaz_stage "Get blocks."
 
-    check_dir "$path_inter_msa"    || exit 1
+    # check_dir "$path_inter_msa"    || exit 1
     check_dir "$path_features_msa" || exit 1
 
+    mkdir -p "${path_inter_msa}"
     mkdir -p ${path_plots_synteny}
 
     Rscript $INSTALLED_PATH/analys/analys_01_blocks3.R \
@@ -39,7 +41,7 @@ if [ "$run_seq" = true ]; then # -seq
     mkdir -p $path_seq
     Rscript $INSTALLED_PATH/analys/analys_02_seq_cons.R \
         --path.features.msa ${path_features_msa} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --path.chr ${path_chrom} \
         --path.seq ${path_seq} \
         --aln.type ${aln_type} \
@@ -72,49 +74,49 @@ if [ "$run_snp" = true ]; then # -snp
         --path.features.msa ${path_features_msa} \
         --path.snp ${path_snp} \
         --path.seq ${path_seq} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --aln.type ${aln_type} \
         --cores ${cores}
 
     pokaz_message "Step -snp is done!"
 
-    # Pi diversity
-    if [ "$run_snp_pi" = true ]; then # -snp_pi
+    # rm ${path_snp}*log
+fi
 
-        pokaz_stage "Pi diversity."
-        vcf_files=$(find "$path_snp" -type f -name "*.vcf")
-        if [ -z "$vcf_files" ]; then
-            echo "VCF-files are not found in $path_snp!"
-            exit 1
-        fi
 
-        mkdir -p ${path_plots_snp}
+# Pi diversity
+if [ "$run_snp_pi" = true ]; then # -snp_pi
 
-        # Run VCF-tools
-        for vcf_file in $vcf_files; do
-            echo "VCF-tools.."
-            base_name=$(basename "$vcf_file" .vcf)
-            output_file="${path_snp}${base_name}_output"
-            vcftools --vcf "$vcf_file" --site-pi --out "$output_file" &>/dev/null
-            vcftools --vcf "$vcf_file" --extract-FORMAT-info ID --out "$output_file" &>/dev/null
-
-            Rscript $INSTALLED_PATH/analys/analys_04_snp_plot.R \
-                --path.figures ${path_plots_snp} \
-                --file.pi "${output_file}.sites.pi"
-
-            echo "Plink.."
-            plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr &>/dev/null
-
-            Rscript $INSTALLED_PATH/analys/analys_04_snp_dist.R \
-                --path.figures ${path_plots_snp} \
-                --file.pi ${vcf_file} \
-                --path.snp ${path_snp}
-        done
-        pokaz_message "Step -snp_pi is done!"
+    pokaz_stage "Pi diversity."
+    vcf_files=$(find "$path_snp" -type f -name "*.vcf")
+    if [ -z "$vcf_files" ]; then
+        echo "VCF-files are not found in $path_snp!"
+        exit 1
     fi
 
-    # rm ${path_snp}*log
+    mkdir -p ${path_plots_snp}
 
+    # Run VCF-tools
+    for vcf_file in $vcf_files; do
+        echo "VCF-tools.."
+        base_name=$(basename "$vcf_file" .vcf)
+        output_file="${path_snp}${base_name}_output"
+        vcftools --vcf "$vcf_file" --site-pi --out "$output_file" &>/dev/null
+        vcftools --vcf "$vcf_file" --extract-FORMAT-info ID --out "$output_file" &>/dev/null
+
+        Rscript $INSTALLED_PATH/analys/analys_04_snp_plot.R \
+            --path.figures ${path_plots_snp} \
+            --file.pi "${output_file}.sites.pi"
+
+        echo "Plink.."
+        plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr &>/dev/null
+
+        Rscript $INSTALLED_PATH/analys/analys_04_snp_dist.R \
+            --path.figures ${path_plots_snp} \
+            --file.pi ${vcf_file} \
+            --path.snp ${path_snp}
+    done
+    pokaz_message "Step -snp_pi is done!"
 fi
 
 
@@ -136,7 +138,7 @@ if [ "$run_sv_call" = true ]; then # -sv_call|-sv
         --path.seq ${path_seq} \
         --path.sv ${path_sv} \
         --path.gff ${path_gff} \
-        --ref.pref  ${ref_pref} \
+        --ref  ${ref_pref} \
         --aln.type ${aln_type} \
         --acc.anal ${acc_anal}
     
@@ -151,6 +153,14 @@ if [ "$run_sv_call" = true ]; then # -sv_call|-sv
     pokaz_message "Step -sv is done!"
 fi
 
+# ORFs in SVs
+if [ "$run_sv_orf" = true ]; then # -sv_orf
+    pokaz_stage "Get ORFs from SVs"
+
+    Rscript $INSTALLED_PATH/analys/sv_05_orfs.R \
+        --path.features.msa ${path_features_msa} \
+        --path.sv ${path_sv}
+fi
 
 # Compare SVs with TEs
 # if [ "$run_annogroup" = true ]; then # -annogroup
@@ -173,6 +183,8 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
         pokaz_message "Simirarity value is 85% (default)"
         similarity_value=85
     fi
+    coverage_value=${similarity_value}
+    pokaz_message "Coverage value is set to ${coverage_value}%"
 
     check_dir "$path_features_msa" || exit 1
     check_dir "$path_sv"           || exit 1
@@ -186,19 +198,27 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
     
     # if [ ! -f "${file_sv_big_on_sv}" ]; then
         blastn -db ${file_sv_big} -query ${file_sv_big} -out ${file_sv_big_on_sv} \
-           -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
-           -perc_identity ${similarity_value} -num_threads "${cores}"
+           -perc_identity ${similarity_value} \
+           -num_threads "${cores}" \
+           -outfmt "6 qseqid qstart qend sstart send pident length sseqid qlen slen"
+           
     # fi
     pokaz_message "Blast is done."
+    pokaz_message "Similarity: ${similarity_value}. Coverage: ${coverage_value}"
 
     file_sv_big_on_sv_cover=${file_sv_big%.fasta}_on_sv_cover.rds
-    Rscript $INSTALLED_PATH/sim/sim_in_seqs.R --in_file ${file_sv_big} --db_file ${file_sv_big} --res ${file_sv_big_on_sv} \
-            --out ${file_sv_big_on_sv_cover} --sim ${similarity_value} --use_strand T
+    Rscript $INSTALLED_PATH/sim/sim_in_seqs.R \
+        --in_file ${file_sv_big} \
+        --db_file ${file_sv_big} \
+        --res ${file_sv_big_on_sv} \
+        --out ${file_sv_big_on_sv_cover} \
+        --use_strand T \
+        --sim ${similarity_value} \
+        --coverage ${coverage_value}
 
     rm "$file_sv_big".nin
     rm "$file_sv_big".nhr
     rm "$file_sv_big".nsq
-
 
     pokaz_stage "Plotting SV-Graph..."
     Rscript $INSTALLED_PATH/analys/sv_03_plot_graph.R \
@@ -210,25 +230,35 @@ if [ "$run_sv_graph" = true ]; then # -sv_graph
         --path.features.msa ${path_features_msa} \
         --path.sv ${path_sv}
 
-    if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
-
-        if [ -f "${path_sv}/sv_in_graph_orfs.fasta" ]; then
-            pokaz_stage "BLAST on proteins..."
-
-            makeblastdb -in ${set_file_prot} -dbtype prot
-            blastp -db "${set_file_prot}" \
-                   -query "${path_sv}sv_in_graph_orfs.fasta" \
-                   -out "${path_sv}blast_sv_orfs_on_set.txt" \
-                   -outfmt "7 qseqid qstart qend sstart send pident length sseqid" \
-                   -num_threads "${cores}"
-        else
-            pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
-        fi
-
-    fi
     pokaz_message "Step -sv_graph is done!"
 fi
 
+# BLAST ORFs against the database
+if [ "$run_sv_sim_prot" = true ]; then # -sv_sim_prot
+
+    if [ ! -f "${set_file_prot}" ]; then
+        pokaz_error "File with proteins does not exist, provide an existing file."
+    elif [ -f "${path_sv}/sv_big_orfs.fasta" ]; then
+        pokaz_stage "BLAST on proteins..."
+
+        path_simsearch_out="${path_sv}.simsearch/"
+        echo "Output ${path_simsearch_out}"
+        # simsearch -in_seq "${path_sv}sv_big_orfs.fasta" -on_seq ${set_file_prot} -out ${path_simsearch_out} -cores "${cores}" -prot
+
+
+        base_set_file_prot="$(basename "$set_file_prot")"
+        makeblastdb -in "$set_file_prot" -dbtype prot -out "${path_simsearch_out}${base_set_file_prot}" > /dev/null
+
+        blastp -db "${path_simsearch_out}${base_set_file_prot}" \
+               -query "${path_sv}sv_big_orfs.fasta" \
+               -out "${path_sv}blast_sv_big_orfs_on_set.txt" \
+               -outfmt "6 qseqid qstart qend sstart send pident length sseqid  qlen slen" \
+               -num_threads "${cores}"
+    else
+        pokaz_error "File with ORFs does not exist, BLAST against proteins was not performed."
+    fi
+
+fi
 
 # Annotation groups
 # if [ "$run_sv_sim" = true ]; then # -sv_sim
@@ -249,7 +279,7 @@ fi
 
 #     # if [ ! -f "${file_sv_big_on_set}" ]; then
 #         blastn -db "${set_file}" -query "${file_sv_big}" -out "${file_sv_big_on_set}" \
-#            -outfmt "6 qseqid qstart qend sstart send pident length sseqid" \
+#            -outfmt "6 qseqid qstart qend sstart send pident length sseqid  qlen slen" \
 #            -perc_identity "${similarity_value}" -num_threads "${cores}"
 #     # fi
 

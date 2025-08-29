@@ -1,41 +1,3 @@
-#' Extract chromosome number by a provided format
-#' 
-#' This function matches a specified chromosome format 
-#' in the chromosome names of a GFF file,
-#' extracts and saves the corresponding chromosome numbers.
-#' 
-#' @param gff A data frame containing the GFF file data.
-#' @param s.chr The chromosome format to match. For example, "chr" for formats like "chr1", "chr2", etc.
-#' @return A modified data frame with chromosome information extracted.
-#' 
-#' @examples
-#' # Example usage
-#' gff_data <- read.table("data.gff", header = FALSE)
-#' matchChromosomeFormat(gff_data, "chr") # Matches chromosome format starting with "chr"
-#' 
-#' @export
-extractChrByFormat <- function(gff, s.chr){
-  
-  n.gff = nrow(gff)
-  matched.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = TRUE)
-  if(length(matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
-  
-  # Cheromosome ID
-  idx.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = F)
-  gff = gff[idx.chr.format,]
-  if(nrow(gff) < 0.7 * n.gff) stop('Check the chromosome formats (#2)')
-  
-  gff$chr <- sub(paste(".*",s.chr,"(\\d+)", sep = ''), "\\1", gff$V1)
-  if(sum(is.na(gff$chr)) > 0) stop('Check the chromosome formats (#3)')
-  
-  if(nrow(gff) != n.gff){
-    pokazAttention('Not all the gff records were recognized by chromosomal format, only',nrow(gff), 'out of', n.gff)
-  }
-  
-  return(gff)
-}
-
-
 #' Convert GFF Annotations Using MSA Data
 #'
 #' This function converts GFF annotations using multiple sequence alignment (MSA) data.
@@ -65,22 +27,24 @@ extractChrByFormat <- function(gff, s.chr){
 #' gff_data <- gffgff("path/to/consensus/", "acc1", "acc2", gff1)
 #' 
 #' @export
-gff2gff <- function(path.proj,
-                    acc1, acc2, # if one of the accessions is called 'pangen', then transfer is with pangenome coordinate
+gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', then transfer is with pangenome coordinate
                     gff1, 
-                    n.chr,
+                    path.proj=NULL,
+                    aln.type = 'msa_',  # please provide correct prefix. For example, in case of reference-based, it's 'comb_'
                     ref.acc='',
                     exact.match=T, 
-                    aln.type = 'msa_',  # please provide correct prefix. For example, in case of reference-based, it's 'comb_'
+                    s.chr = '_Chr', # in this case the pattern is "*_ChrX", where X is the number
                     echo=FALSE,
                     pangenome.name='Pangen',
-                    s.chr = '_Chr', # in this case the pattern is "*_ChrX", where X is the number
-                    remain=F
+                    remain=F, ...
                     ){
   
-  path.cons <- file.path(path.proj, "features", "msa/")
+  # --- Determine Pannagram version and corresponding paths ---
+  dot.args <- list(...)
+  pannagram.paths = getPannagramPaths(path.proj, dot.args)
+  path.cons <- pannagram.paths$path.msa
   
-  # Variables
+  # --- Variables ---
   gr.accs.e = "accs/"
   
   # Set of names of accettions, which can be used to specify pangenomes coordinates
@@ -95,6 +59,24 @@ gff2gff <- function(path.proj,
   }
   
   if(acc1 == acc2) stop('Accessions provided are identical')
+  
+  # --- Determine the number of chromosomes ---
+  
+  i.chr <- 1
+  while (TRUE) {
+    file.msa.tmp <- paste0(path.cons, aln.type, i.chr, '_', i.chr, ref.suff, '.h5')
+    if (!file.exists(file.msa.tmp)) break
+    i.chr <- i.chr + 1
+  }
+  n.chr <- i.chr - 1
+  if (n.chr == 0) {
+    pokaz(path.cons)
+    pokaz(aln.type)
+    pokazAttention('Required format:', paste0(path.cons, aln.type, 'X_X', ref.suff, '.h5'))
+    stop('Files in the required format do not exist.')
+  }
+  if(echo) pokaz("Number of chromosome is", n.chr)
+  
   
   gff1$idx = 1:nrow(gff1)
   # Get chromosomes by format
@@ -118,9 +100,6 @@ gff2gff <- function(path.proj,
   
   for(i.chr in 1:n.chr){
     
-    # if(i.chr == 5){
-    #   save(list = ls(), file = "tmp_workspace_chr5.RData")
-    # }
     # ---
     # If there some regions to annotate from the chromosome i.chr
     idx.chr = which(gff2$chr == i.chr)
@@ -258,9 +237,7 @@ gff2gff <- function(path.proj,
 #' converted_bed <- bed2bed("path/to/consensus/", "acc1", "acc2", bed_data)
 #'
 #' @export
-bed2bed <- function(path.cons, 
-                    acc1, acc2,
-                    bed1, 
+bed2bed <- function(bed1, 
                     ... # Use '...' to capture all other arguments
 ) {
   
@@ -279,10 +256,7 @@ bed2bed <- function(path.cons,
   )
   
   # Call gff2gff function, passing all additional parameters through '...'
-  gff2 = gff2gff(path.cons = path.cons, 
-                 acc1 = acc1, 
-                 acc2 = acc2,
-                 gff1 = gff1, 
+  gff2 = gff2gff(gff1 = gff1, 
                  ...)
   
   # Convert the output back to BED format
@@ -294,40 +268,70 @@ bed2bed <- function(path.cons,
 
 
 #' @export
-pos2pos <- function(path.cons, 
-                    acc1, acc2,
-                    pos1, 
+pos2pos <- function(pos1, 
                     ... # Use '...' to capture all other arguments
 ) {
   
   # Convert Positions to GFF-like format
   colnames.pos1 = colnames(pos1)
-  colnames(pos1) = c('chrom', 'beg', 'end')
+  colnames(pos1) = c('chrom', 'pos', 'info')
   gff1 = data.frame(V1 = pos1$chrom,
                     V2 = 'tmp',
                     V3 = 'type',
-                    V4 = pos1$beg,
-                    V5 = pos1$end,
+                    V4 = pos1$pos,
+                    V5 = pos1$pos,
                     V6 = 0,
                     V7 = '+',
                     V8 = '.',
-                    V9 = 'pos'
+                    V9 = pos1$info
   )
   
   # Call gff2gff function, passing all additional parameters through '...'
-  gff2 = gff2gff(path.cons = path.cons, 
-                 acc1 = acc1, 
-                 acc2 = acc2,
-                 gff1 = gff1, 
+  gff2 = gff2gff(gff1 = gff1, 
                  ...)
   
   # Convert the output back to Positions format
-  pos2 = gff2[,c(1, 4, 5)]
+  pos2 = gff2[,c(1, 5, 9)]
   colnames(pos2) = colnames.pos1[1:3]
   
   return(pos2)
 }
 
+#' Extract chromosome number by a provided format
+#' 
+#' This function matches a specified chromosome format 
+#' in the chromosome names of a GFF file,
+#' extracts and saves the corresponding chromosome numbers.
+#' 
+#' @param gff A data frame containing the GFF file data.
+#' @param s.chr The chromosome format to match. For example, "chr" for formats like "chr1", "chr2", etc.
+#' @return A modified data frame with chromosome information extracted.
+#' 
+#' @examples
+#' # Example usage
+#' gff_data <- read.table("data.gff", header = FALSE)
+#' matchChromosomeFormat(gff_data, "chr") # Matches chromosome format starting with "chr"
+#' 
+extractChrByFormat <- function(gff, s.chr){
+  
+  n.gff = nrow(gff)
+  matched.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = TRUE)
+  if(length(matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
+  
+  # Cheromosome ID
+  idx.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = F)
+  gff = gff[idx.chr.format,]
+  if(nrow(gff) < 0.7 * n.gff) stop('Check the chromosome formats (#2)')
+  
+  gff$chr <- sub(paste(".*",s.chr,"(\\d+)", sep = ''), "\\1", gff$V1)
+  if(sum(is.na(gff$chr)) > 0) stop('Check the chromosome formats (#3)')
+  
+  if(nrow(gff) != n.gff){
+    pokazAttention('Not all the gff records were recognized by chromosomal format, only',nrow(gff), 'out of', n.gff)
+  }
+  
+  return(gff)
+}
 
 plotMsaFragment <- function(path.cons, 
                        acc,
