@@ -59,7 +59,7 @@ for db_file in "${db_files[@]}"; do
     file_out_cnt="${output_pref}${db_pref}_${sim_threshold}_${coverage}.cnt"
     pokaz_message "File with counts ${file_out_cnt}"
     if [ -f "$file_out_cnt" ]; then
-       pokaz_message "Counts for ${db_name} estimated."
+       pokaz_message "Counts for ${db_pref} estimated."
        continue
     fi
 

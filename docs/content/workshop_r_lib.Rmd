@@ -1,0 +1,206 @@
+---
+title: "Pipeline to work with SVs"
+output: null_document
+---
+
+
+# Setup
+```{r}
+library(pannagram)
+library(ggplot2)
+library(igraph)
+library(network)
+library(GGally)
+source("paths.R")  
+
+```
+
+## Paths
+```{r}
+
+path.sv = paste0(path.project, 'features/sv/')
+
+path.figures = paste0(path.project, 'figures/')
+dir.create(path.figures)
+
+```
+
+## Files
+```{r}
+
+file.sv.seqs = 'seq_sv_big.fasta'
+file.sv.partition = 'sv_partition_solved.txt'
+file.graph.edges = 'edges_solved.txt'
+
+```
+
+
+## Binning
+```{r}
+len.bins <- c(0, 100, 200, 400, 800, 1000, 3000, 5000, 7000, 12000, Inf)
+len.labels <- c("0-100", "100-200", "200-400", "400-800", "800-1k", "1k-3k", "3k-5k", "5k-7k", "7k-12k", "12k+")
+
+color.len <- c(
+  "0-100" = "#1f77b4",
+  "100-200" = "#50B498",
+  "200-400" = "#2ca02c",
+  "400-800" = "#bcbd22",
+  "800-1k" = "#ff7f0e",
+  "1k-3k" = "#d62728",
+  "3k-5k" = "#9467bd",
+  "5k-7k" = "#e377c2",
+  "7k-12k" = "#8c564b",
+  "12k+" = "#7f7f7f"
+)
+```
+
+
+# Read SVs
+```{r}
+
+sv.seqs = readFasta(file.path(path.sv, file.sv.seqs))
+sv.partition = read.table(file.path(path.sv, file.sv.partition))
+sv.partition = setNames(sv.partition$V2, sv.partition$V1)
+
+edges = read.table(file.path(path.sv, file.graph.edges))
+edges = unique(edges)
+
+```
+
+
+# Plot graph
+## Solved graph
+```{r}
+g <- network(edges, matrix.type = "edgelist", ignore.eval = FALSE, directed = TRUE)
+g.names = network.vertex.names(g)
+
+set.seed(239)
+p <- ggnet2(g, label = F, edge.color = "black",
+                    node.size = 1,
+                    color = '#468B97',
+                    arrow.gap = 0.01, arrow.size = 2,
+)
+p
+
+savePNG(p, path = path.figures, name = paste0('graph_05_solved'),
+        width = 6, height = 6)
+
+```
+
+## Colored by length
+```{r}
+
+g.names.len = as.numeric(sapply(g.names, function(s) strsplit(s, '\\|')[[1]][2]))
+g.names.len.bin <- as.character(cut(g.names.len, breaks = len.bins, right = FALSE, labels = len.labels))
+g %v% "colors" = as.character(g.names.len.bin)
+
+set.seed(239)
+p <- ggnet2(g,
+            edge.color = "grey70", 
+            node.size = 1,
+            color = 'colors',
+            palette = color.len
+) + 
+  guides(size = F)  + theme(aspect.ratio = 1) + 
+  guides(color = guide_legend(title = "Length, bp"))
+
+p
+
+savePNG(p, path = path.figures, name = paste0('graph_06_colored'),
+        width = 7, height = 6)
+
+```
+
+
+## Labels added by length
+```{r}
+
+
+g.label <- as.character(sv.partition[g.names])
+
+g.label[duplicated(g.label)] = ''
+
+g %v% "labels" = g.label
+
+set.seed(239)
+p <- ggnet2(g, label = 'labels', 
+            edge.color = "grey70", 
+            node.size = 1,
+            color = 'colors',
+            palette = color.len
+) + 
+  guides(size = F)  + theme(aspect.ratio = 1) + 
+  guides(color = guide_legend(title = "Length, bp"))
+
+p
+
+savePNG(p, path = path.figures, name = paste0('graph_07_label'),
+        width = 7, height = 6)
+```
+
+
+# Work with components
+# Get sequences
+```{r}
+
+i.comp = 38
+comp.seqs = sv.seqs[names(sv.partition)[sv.partition == 38]]
+pokaz('Number of sequences in component', i.comp, 'is', length(comp.seqs))
+
+print(paste('Number of sequences in component', i.comp, 'is', length(comp.seqs)))
+
+comp.lens = nchar(comp.seqs)
+
+```
+## Compare sequences
+```{r}
+
+s1 = comp.seqs[1]
+s2 = comp.seqs[2]
+
+dotplot.s(s1, s1, 15, 12)
+dotplot.s(s1, s2, 15, 12)
+
+```
+## Nucleotide plot
+```{r}
+
+p = ntplot.s(s1)
+p
+
+```
+
+
+
+## ORF-Finder
+```{r}
+orf.info = orfFinder(s1)
+names(orf.info)
+```
+
+
+### Positions
+```{r}
+head(orf.info$pos)
+
+p = orfplot(orf.info$pos)
+p
+
+savePDF(p, path = path.figures, name = 'orf_tmp', width = 5, height = 4)
+
+savePDF(p + ylim(c(0, 10)), path = path.figures, name = 'orf_tmp_ylim', width = 5, height = 3)
+
+```
+### Sequences
+```{r}
+
+aa.seqs = orf.info$orf[1:2]
+
+writeFasta(aa.seqs, file.path(path.sv, 'sv_tmp_orf_1_2.fasta'))
+
+```
+
+
+
+
+

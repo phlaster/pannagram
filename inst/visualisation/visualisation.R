@@ -89,7 +89,8 @@ plotSynteny <- function(x, base.len = NULL, hlines=NULL, vlines=NULL,
     scale_color_manual(values = c("FALSE"=col.rc, "TRUE"=col.fw)) +
     coord_fixed(ratio=1) +
     scale_y_continuous(breaks = v.ticks, labels = s.ticks, expand=expand.axis) +
-    scale_x_continuous(breaks = v.ticks, labels = s.ticks, expand=expand.axis)
+    scale_x_continuous(breaks = v.ticks, labels = s.ticks, expand=expand.axis) +
+    theme( axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
   if(!is.null(hlines)) p <- p + geom_hline(yintercept=hlines, color= col.line)
   if(!is.null(vlines)) p <- p + geom_vline(xintercept=vlines, color= col.line)

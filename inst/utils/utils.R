@@ -1480,9 +1480,9 @@ wndSum <- function(d, wnd.len, echo=T){
 #' 
 #' @author Anna A. Igolkina 
 #' @export
-readBlast <- function(file) {
+readBlast <- function(file, stringsAsFactors=F, header=F) {
   if (any(grepl("^[^#]", readLines(file)))) {
-    return(read.table(file, stringsAsFactors = F,  header = F, comment.char = ""))
+    return(read.table(file, stringsAsFactors = stringsAsFactors,  header = header, comment.char = "", check.names = F))
   } else {
     return(NULL)
   }
