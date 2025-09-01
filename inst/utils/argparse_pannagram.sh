@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
         
         # Required parameters
         -path_out|-path_proj|-path_project) path_project="$2"; shift 2; required_params+=("path_project") ;;
-        -path_in)                path_in="$2"; shift 2; required_params+=("path_in") ;; # path with all genomes in fasta format
+        -path_in| -path_genomes)                 path_in="$2"; shift 2; required_params+=("path_in") ;; # path with all genomes in fasta format
 
         -s|-stage|-step) step_start="$2"; shift 2 ;; # first stage to run from, when the stage is not provided - the last interrupted stage withh be re-run
         -e|-end)         step_end="$2"; shift 2 ;;   # last stage to run to
@@ -61,7 +61,11 @@ while [ $# -gt 0 ]; do
 
         -one2one)        one2one="T"; shift 1 ;;                 # do compare chroms one-to-one (default in REF and MSA modes)
         -all2all)        one2one="F"; shift 1 ;;                 # do compare chroms all-to-all (default in PRE mode)
-        -incl_reps |-include_repeats) purge_reps="F"; shift 1 ;; # repeats filtration
+        -incl_reps |-include_repeats) purge_reps="F"; shift 1 ;; # keep repeats
+        -purge_repeats | -purge_reps)  
+            pokaz_attention "Option -purge_repeats/-purge_reps is deprecated. Repeats are filtered by default now. Use -include_repeats if you do NOT want to filter repeats."  
+            exit 1 
+            ;; 
         -rev )           flag_rev="T"; shift 1 ;;                # reverse parts
         -orf )           flag_orf="T"; shift 1 ;;                # run ORF finder
         -purge_contigs)  purge_contigs="T"; shift 1 ;;

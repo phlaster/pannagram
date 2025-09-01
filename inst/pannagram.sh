@@ -129,7 +129,7 @@ else
         IFS=',' read -ra refs_all <<< "$ref_set"
 
         # Check if the number of reference genomes is sufficient
-        if (( ${#refs_all[@]} -lt ref_num )); then
+        if (( ${#refs_all[@]} < $ref_num )); then
             genomes_needed=$((ref_num - ${#refs_all[@]}))
             with_level 1 pokaz_attention "Not enough reference genomes. Adding $genomes_needed genome(s)."
 
