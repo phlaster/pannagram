@@ -264,7 +264,6 @@ if [ -z "${comb_file}" ]; then
         fi
 
     else
-
         # Write combinations
         if [ "$nchr" -ne 0 ] && [ "$nchr_ref" -ne 0 ]; then
             for N in $(seq 1 $nchr); do

@@ -92,6 +92,9 @@ if [[ ${#unrecognized_options[@]} -gt 0 ]]; then
     exit 1
 fi
 
+# Validate one2one/all2all conflict
+
+
 # Determine mode_pangen
 name_mode_pre='PRE'
 name_mode_ref='REF'
@@ -113,11 +116,20 @@ else
     exit 1
 fi
 
-# Validate one2one/all2all conflict
+# Validate one2one/all2all
 if [[ -n "$one2one" && "$one2one" != "T" && "$one2one" != "F" ]]; then
-    pokaz_error "Error: -all2all and -one2one cannot be used together"
+    pokaz_error "Error: -one2one must be 'T' or 'F'"
     exit 1
+elif [[ -z "$one2one" ]]; then
+    # Parameters -all2all and -one2one should be taken with default values
+    if [[ "$mode_pangen" == "$name_mode_pre" ]]; then
+        one2one="F"
+    else
+        one2one="T"
+    fi
 fi
+
+# Paths
 
 path_in=$(add_symbol_if_missing "$path_in" "/")
 path_project=$(add_symbol_if_missing "$path_project" "/")
