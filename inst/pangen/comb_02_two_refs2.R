@@ -81,6 +81,9 @@ extract_xy <- function(filename) {
 
 pref.combinations <- unique(sapply(combo_files, extract_xy))
 
+save(list = ls(), file = "tmp_workspace_combinations.RData")
+
+
 if(length(pref.combinations) == 0) {
   stop('No files with the ref-based alignments are found')
 }
