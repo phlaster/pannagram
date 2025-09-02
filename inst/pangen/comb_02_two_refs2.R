@@ -80,6 +80,7 @@ extract_xy <- function(filename) {
 }
 
 pref.combinations <- unique(sapply(combo_files, extract_xy))
+pref.combinations <- pref.combinations[!is.null(pref.combinations)]  # THIS IS THE FITURE
 
 save(list = ls(), file = "tmp_workspace_combinations.RData")
 
