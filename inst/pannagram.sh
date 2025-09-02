@@ -8,6 +8,9 @@ source $INSTALLED_PATH/utils/help_pannagram.sh
 source $INSTALLED_PATH/utils/argparse_pannagram.sh
 source $INSTALLED_PATH/utils/chunk_paths.sh
 
+
+echo "All2all? ${one2one}"
+
 # Make folders
 mkdir -p "${path_project}"
 check_dir "${path_project}"
