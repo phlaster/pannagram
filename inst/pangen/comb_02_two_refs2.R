@@ -75,15 +75,12 @@ extract_xy <- function(filename) {
   x <- parts[2]
   y <- parts[3]
   
-  if(x != y) return(NULL)  # CHANGE IN FUTURE
+  if(x != y) return("?")  # CHANGE IN FUTURE
   return(paste(x, y, sep = '_'))
 }
 
 pref.combinations <- unique(sapply(combo_files, extract_xy))
-pref.combinations <- pref.combinations[!is.null(pref.combinations)]  # THIS IS THE FITURE
-
-save(list = ls(), file = "tmp_workspace_combinations.RData")
-
+pref.combinations <- pref.combinations[pref.combinations != "?"]  # THIS IS THE FITURE
 
 if(length(pref.combinations) == 0) {
   stop('No files with the ref-based alignments are found')
