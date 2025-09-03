@@ -1518,7 +1518,7 @@ pokaz_attention "Extra steps are running.."
 
 # Get sequences of extra long fragments - 1
 
-with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments - 1."
 
 # Paths
 path_extra_long="${path_extra}long/"
@@ -1561,7 +1561,7 @@ fi
 source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Align extra long fragments - 1
-with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments - 1."
 
 # Logs
 step_name="step${step_num}_comb_10"
@@ -1600,7 +1600,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Insert extra long fragments - 1
 
-with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments - 1."
 
 # Logs
 step_name="step${step_num}_comb_11"
@@ -1635,7 +1635,7 @@ fi
 source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Get sequences of extra long fragments - 2
-with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments - 2."
 
 # Paths
 path_extra_long2="${path_extgra}long2/"
@@ -1681,7 +1681,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 # ----------------------------------------------
 # Align extra long fragments - 2
 
-with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments - 2."
 
 # Logs
 step_name="step${step_num}_comb_10"
@@ -1722,7 +1722,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 # ----------------------------------------------
 # Insert extra long fragments - 2
 
-with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments - 2."
 
 # Logs
 step_name="step${step_num}_comb_11"

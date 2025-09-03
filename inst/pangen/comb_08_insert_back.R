@@ -6,7 +6,7 @@ library('foreach')
 library(doParallel)
 library("optparse")
 source(system.file("utils/utils.R", package = "pannagram"))
-source(system.file("pangen/comb_func_mafft_refine.R", package = "pannagram"))
+source(system.file("pangen/comb_func_mafft_refine2.R", package = "pannagram"))
 })
 
 # ***********************************************************************
