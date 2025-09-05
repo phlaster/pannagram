@@ -409,8 +409,7 @@ refineAlignment <- function(seqs.clean, path.work){
   # }
   
   return(list(pos = positions,
-              aln = alignments,
-              n.nt = ))
+              aln = alignments))
 }
 
 #' Align two Alignments with MAFFT
