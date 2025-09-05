@@ -20,18 +20,18 @@ refineAlignment <- function(seqs.clean, path.work){
   seqs.clean = toupper(seqs.clean)
   
   # ---- Handle N in sequences ----
-  n.n = sapply(gregexpr("N", seqs.clean, ignore.case = TRUE), function(m) sum(m > 0))
-  seqs.names.n = names(seqs.clean)[n.n != 0]
-  if(length(seqs.names.n) > 0){
-    pos.replace = list()
-    for(s.name in seqs.names.n){
-      s = seqs.clean[s.name]
-      s = seq2nt(s)
-      pos.replace[[s.name]] = which((s != 'n') & (s != 'N'))
-      s = s[pos.replace[[s.name]]]
-      seqs.clean[s.name] = nt2seq(s)
-    }
-  }
+  # n.n = sapply(gregexpr("N", seqs.clean, ignore.case = TRUE), function(m) sum(m > 0))
+  # seqs.names.n = names(seqs.clean)[n.n != 0]
+  # if(length(seqs.names.n) > 0){
+  #   pos.replace = list()
+  #   for(s.name in seqs.names.n){
+  #     s = seqs.clean[s.name]
+  #     s = seq2nt(s)
+  #     pos.replace[[s.name]] = which((s != 'n') & (s != 'N'))
+  #     s = s[pos.replace[[s.name]]]
+  #     seqs.clean[s.name] = nt2seq(s)
+  #   }
+  # }
   
   # ---- Distance matrix ----
   # 
@@ -394,22 +394,23 @@ refineAlignment <- function(seqs.clean, path.work){
     
   }
   
-  # ---- Put N back ----
-  if(length(seqs.names.n) > 0){
-    for(i.p in 1:length(positions)){
-      pos = positions[[i.p]]
-      for(s.name in seqs.names.n){
-        if(s.name %in% row.names(pos)){
-          pos.s = pos[s.name,]
-          pos.s[pos.s != 0] = pos.replace[[s.name]]
-          # stop()
-        }
-      }
-    }
-  }
+  # # ---- Put N back ----
+  # if(length(seqs.names.n) > 0){
+  #   for(i.p in 1:length(positions)){
+  #     pos = positions[[i.p]]
+  #     for(s.name in seqs.names.n){
+  #       if(s.name %in% row.names(pos)){
+  #         pos.s = pos[s.name,]
+  #         pos.s[pos.s != 0] = pos.replace[[s.name]]
+  #         # stop()
+  #       }
+  #     }
+  #   }
+  # }
   
   return(list(pos = positions,
-              aln = alignments))
+              aln = alignments,
+              n.nt = ))
 }
 
 #' Align two Alignments with MAFFT
