@@ -78,6 +78,14 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   if(echo) pokaz("Number of chromosome is", n.chr)
   
   gff1$idx = 1:nrow(gff1)
+ 
+  # Remove zero or negative positions
+  idx_negative <- ((gff1$V4 <= 0) | (gff1$V5 <= 0))
+  if (any(idx_negative)) {
+    pokazAttention("Some positions in the input data are <= 0. They will be removed")
+    gff1 <- gff1[!idx_negative, ]
+  }
+  
   # Get chromosomes by format
   gff1 =  extractChrByFormat(gff1, s.chr)
   gff1 = gff1[order(gff1$chr),]
@@ -144,8 +152,6 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       w = getPrevNext(v.corr)
       w$v.next[is.na(w$v.next)] = 0
       w$v.prev[is.na(w$v.prev)] = 0
-      
-      save(list = ls(), file = "tmp_workspace_gff2gff.RData")
       
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
