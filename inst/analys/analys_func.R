@@ -241,7 +241,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
 bed2bed <- function(bed1, 
                     ... # Use '...' to capture all other arguments
 ) {
-  
+  pokaz('bed2bed')
   # Convert BED to GFF-like format
   colnames.bed1 = colnames(bed1)
   colnames(bed1) = c('chrom', 'beg', 'end', 'name', 'score', 'strand')
