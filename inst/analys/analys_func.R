@@ -77,6 +77,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   }
   if(echo) pokaz("Number of chromosome is", n.chr)
   
+  save(list = ls(), file = "tmp_workspace_gff2gff.RData")
   
   gff1$idx = 1:nrow(gff1)
   # Get chromosomes by format
