@@ -77,8 +77,6 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   }
   if(echo) pokaz("Number of chromosome is", n.chr)
   
-  save(list = ls(), file = "tmp_workspace_gff2gff.RData")
-  
   gff1$idx = 1:nrow(gff1)
   # Get chromosomes by format
   gff1 =  extractChrByFormat(gff1, s.chr)
@@ -144,8 +142,13 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       gff2$V5[idx.chr] = v.corr[gff1$V5[idx.chr]]
     } else {
       w = getPrevNext(v.corr)
+      w$v.next[is.na(w$v.next)] = 0
+      w$v.prev[is.na(w$v.prev)] = 0
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
+      
+      if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
+      if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
     }
     idx.chr = idx.chr[(gff2$V4[idx.chr] != 0) & (gff2$V5[idx.chr] != 0)]
     
@@ -316,13 +319,11 @@ pos2pos <- function(pos1,
 extractChrByFormat <- function(gff, s.chr){
   
   n.gff = nrow(gff)
-  matched.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = TRUE)
-  if(length(matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
-  
   # Cheromosome ID
-  idx.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = F)
-  gff = gff[idx.chr.format,]
-  if(nrow(gff) < 0.7 * n.gff) stop('Check the chromosome formats (#2)')
+  gff.matched.chr.format <- grepl(paste0(".*",s.chr,"\\d+"), gff$V1)
+  if(sum(gff.matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
+  
+  gff = gff[gff.matched.chr.format,]
   
   gff$chr <- sub(paste(".*",s.chr,"(\\d+)", sep = ''), "\\1", gff$V1)
   if(sum(is.na(gff$chr)) > 0) stop('Check the chromosome formats (#3)')
