@@ -102,11 +102,11 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   gff2$len.init = gff2$V5 - gff2$V4 + 1
   gff2$V9 = paste0(gff2$V9, ';len_init=', gff2$len.init)
   gff2$V2 = 'pannagram'
-  gff2$V4 = -1
-  gff2$V5 = -1
+  gff2$V4 = 0
+  gff2$V5 = 0
   gff2$V1 = gsub(acc1, acc2, gff2$V1)
   
-  for(i.chr in 1:n.chr){
+  for(i.chr in 2:n.chr){
     pokaz('Chromosome', i.chr)
     
     # ---
@@ -130,6 +130,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     }
     
     max.chr.len = max(nrow(v), max(abs(v[!is.na(v)])))
+    idx.chr = idx.chr[gff1$V5[idx.chr] <= max.chr.len]
     
     v = v[v[,1]!=0,]
     v = v[!is.na(v[,1]),]
@@ -158,11 +159,11 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
       
-      save(list = ls(), file = "tmp_workspace_gff2gff.RData")
+      # save(list = ls(), file = "tmp_workspace_gff2gff.RData")
       
       # If ids > length of the alignment, it will introduce NAs
-      gff2$V4[is.na(gff2$V4)] = 0
-      gff2$V5[is.na(gff2$V4)] = 0
+      # gff2$V4[is.na(gff2$V4)] = 0
+      # gff2$V5[is.na(gff2$V5)] = 0
       
       # if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
       # if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
@@ -180,12 +181,12 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     idx.noneq[is.na(idx.noneq)] = 1
     
     if(sum(idx.noneq) > 0){
-      gff2$V4[idx.chr][idx.noneq == 1] = 0
-      gff2$V5[idx.chr][idx.noneq == 1] = 0  
+      gff2$V4[idx.chr[idx.noneq == 1]] = 0
+      gff2$V5[idx.chr[idx.noneq == 1]] = 0  
     }
     
-    if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
-    if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
+    if(sum(is.na(gff2$V4[idx.chr])) > 0) stop('NA in gff2$V4[idx.chr]')
+    if(sum(is.na(gff2$V5[idx.chr])) > 0) stop('NA in gff2$V5[idx.chr]')
   }
   
   idx.wrong.blocks = (sign(gff2$V4 * gff2$V5) != 1)
