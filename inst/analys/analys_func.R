@@ -158,6 +158,8 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
       
+      save(list = ls(), file = "tmp_workspace_gff2gff.RData")
+      
       # If ids > length of the alignment, it will introduce NAs
       gff2$V4[is.na(gff2$V4)] = 0
       gff2$V5[is.na(gff2$V4)] = 0
