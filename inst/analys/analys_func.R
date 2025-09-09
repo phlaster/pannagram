@@ -76,8 +76,6 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     stop('Files in the required format do not exist.')
   }
   if(echo) pokaz("Number of chromosome is", n.chr)
-  
-  gff1$idx = 1:nrow(gff1)
  
   # Remove zero or negative positions
   idx_negative <- ((gff1$V4 <= 0) | (gff1$V5 <= 0))
@@ -85,6 +83,9 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     pokazAttention("Some positions in the input data are <= 0. They will be removed")
     gff1 <- gff1[!idx_negative, ]
   }
+  
+  # Indexing
+  gff1$idx = 1:nrow(gff1)
   
   # Get chromosomes by format
   gff1 =  extractChrByFormat(gff1, s.chr)
@@ -106,6 +107,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   gff2$V1 = gsub(acc1, acc2, gff2$V1)
   
   for(i.chr in 1:n.chr){
+    pokaz('Chromosome', i.chr)
     
     # ---
     # If there some regions to annotate from the chromosome i.chr
@@ -156,8 +158,12 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
       
-      if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
-      if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
+      # If ids > length of the alignment, it will introduce NAs
+      gff2$V4[is.na(gff2$V4)] = 0
+      gff2$V5[is.na(gff2$V4)] = 0
+      
+      # if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
+      # if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
     }
     idx.chr = idx.chr[(gff2$V4[idx.chr] != 0) & (gff2$V5[idx.chr] != 0)]
     
