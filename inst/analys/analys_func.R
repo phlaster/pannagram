@@ -266,8 +266,8 @@ bed2bed <- function(bed1,
   gff1 = data.frame(V1 = bed1$chrom,
                     V2 = 'tmp',
                     V3 = 'type',
-                    V4 = bed1$beg,
-                    V5 = bed1$end,
+                    V4 = bed1$beg + 1, # counting starts from 0
+                    V5 = bed1$end + 1, # counting starts from 0
                     V6 = bed1$score,
                     V7 = bed1$strand,
                     V8 = '.',
