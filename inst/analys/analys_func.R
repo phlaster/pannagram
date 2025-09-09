@@ -106,7 +106,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   gff2$V5 = 0
   gff2$V1 = gsub(acc1, acc2, gff2$V1)
   
-  for(i.chr in 2:n.chr){
+  for(i.chr in 1:n.chr){
     pokaz('Chromosome', i.chr)
     
     # ---
