@@ -270,7 +270,7 @@ bed2bed <- function(bed1,
                     V2 = 'tmp',
                     V3 = 'type',
                     V4 = bed1$beg + 1, # counting starts from 0
-                    V5 = bed1$end + 1, # counting starts from 0
+                    V5 = bed1$end,
                     V6 = bed1$score,
                     V7 = bed1$strand,
                     V8 = '.',
@@ -280,6 +280,7 @@ bed2bed <- function(bed1,
   # Call gff2gff function, passing all additional parameters through '...'
   gff2 = gff2gff(gff1 = gff1, 
                  ...)
+  gff2$V4 = gff2$V4 - 1  # counting starts from 0
   
   # Convert the output back to BED format
   bed2 = gff2[,c(1, 4, 5, 9, 6, 7)]
