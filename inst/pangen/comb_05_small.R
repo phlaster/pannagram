@@ -38,8 +38,6 @@ len.short = 50
 # len.large = 40000
 n.flank = 30
 
-print(opt)
-
 # ***********************************************************************
 # ---- Logging ----
 
@@ -65,7 +63,7 @@ if(is.null(num.cores)) stop('Wrong number of cores: NULL')
 pokaz('Number of cores', num.cores, file=file.log.main, echo=echo.main)
 
 # Number of batches
-if(is.na(num.batches)){
+if(is.na(opt$num.batches)){
   num.batches = num.cores
 }
 
