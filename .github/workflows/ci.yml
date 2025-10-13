@@ -1,15 +1,44 @@
-name: CI
+name: Cross-Platform CI
 
 on:
-  push:
-    branches: [dev2_ci]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to test (default: main)'
+        required: true
+        default: 'main'
+      run_on_mac:
+        description: 'Run tests on macOS? (Intel and Apple Silicon)'
+        required: false
+        default: 'true'
+      run_on_linux:
+        description: 'Run tests on Linux?'
+        required: false
+        default: 'true'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    if: >-
+      (matrix.os == 'ubuntu-latest' && inputs.run_on_linux == 'true') ||
+      ((matrix.os == 'macos-latest' || matrix.os == 'macos-14') && inputs.run_on_mac == 'true')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-14]
+        include:
+          - os: macos-latest
+            runner: intel
+          - os: macos-14
+            runner: apple-silicon
+        exclude:
+          - os: ubuntu-latest
+            runner: apple-silicon
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
 
     - name: Set up micromamba
       uses: mamba-org/setup-micromamba@v1
@@ -17,14 +46,23 @@ jobs:
         environment-file: conda-lock.yml
         environment-name: pannagram
         activate-environment: false
+        create-args: >-
+          --override-channels
+          ${{ matrix.os == 'ubuntu-latest' && '--platform=linux-64' || 
+              '--platform=osx-64' }}
 
     - name: Activate environment and install package
       run: |
         eval "$(micromamba shell hook --shell=bash)"
         micromamba activate pannagram
+        
+        echo "=== Environment verification ==="
+        echo "OS: $OSTYPE"
+        echo "Architecture: $(uname -m)"
         echo "CONDA_PREFIX: $CONDA_PREFIX"
         which R
-        Rscript -e "sessionInfo()"
+        R --version | head -n 1
+        
         ./user.sh
 
     - name: Prepare test data
@@ -32,20 +70,31 @@ jobs:
         ROOT_DIR=$(pwd)
         PATH_DATA="$ROOT_DIR/_test_data"
         PATH_TOOLS="$ROOT_DIR/_test_tools"
+        
         mkdir -p "$PATH_DATA" "$PATH_TOOLS"
         echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "$PATH_DATA/ecoli.txt"
         echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "$PATH_DATA/ecoli.txt"
+        
         cd "$PATH_TOOLS"
         git clone https://github.com/iganna/poputils.git
         cd poputils/genomes
+        
+        # Add macOS compatibility
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          echo "Running on macOS - applying compatibility patches..."
+          sed -i '' 's|/proc/cpuinfo|/dev/null|g' genbank_download_list.sh
+        fi
+        
         ./genbank_download_list.sh -f "$PATH_DATA/ecoli.txt" -p "$PATH_DATA"
 
     - name: Run pannagram test
       run: |
         eval "$(micromamba shell hook --shell=bash)"
         micromamba activate pannagram
+        
+        CORES=1
         pannagram -pre \
           -path_in _test_data/ \
           -path_out _test_output \
           -ref GCA_000005845.2 \
-          -cores 1
+          -cores $CORES
