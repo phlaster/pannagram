@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [dev2_ci]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up micromamba
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        environment-file: conda-lock.yml
+        environment-name: pannagram
+        activate-environment: pannagram
+
+    - name: Install package
+      run: |
+        ./user.sh
+
+    - name: Prepare test data
+      run: |
+        PATH_DATA="_test_data"
+        PATH_TOOLS="_test_tools"
+        mkdir -p $PATH_DATA $PATH_TOOLS
+        echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "${PATH_DATA}/ecoli.txt"
+        echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "${PATH_DATA}/ecoli.txt"
+        cd $PATH_TOOLS
+        git clone https://github.com/iganna/poputils.git
+        cd poputils/genomes
+        ./genbank_download_list.sh -f ../../$PATH_DATA/ecoli.txt -p ../../$PATH_DATA
+        cd ../../..
+
+    - name: Run pannagram test
+      run: |
+        pannagram -pre \
+          -path_in _test_data/ \
+          -path_out _test_output \
+          -ref GCA_000005845.2 \
+          -cores 1
