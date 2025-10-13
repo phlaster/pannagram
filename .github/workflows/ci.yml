@@ -19,20 +19,10 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    if: >-
-      (matrix.os == 'ubuntu-latest' && inputs.run_on_linux == 'true') ||
-      ((matrix.os == 'macos-latest' || matrix.os == 'macos-14') && inputs.run_on_mac == 'true')
+    if: ${{ (matrix.os == 'ubuntu-latest' && inputs.run_on_linux == 'true') || (matrix.os == 'macos-latest' && inputs.run_on_mac == 'true') || (matrix.os == 'macos-14' && inputs.run_on_mac == 'true') }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, macos-14]
-        include:
-          - os: macos-latest
-            runner: intel
-          - os: macos-14
-            runner: apple-silicon
-        exclude:
-          - os: ubuntu-latest
-            runner: apple-silicon
 
     steps:
     - name: Checkout repository
