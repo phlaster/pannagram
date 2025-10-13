@@ -76,9 +76,17 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     stop('Files in the required format do not exist.')
   }
   if(echo) pokaz("Number of chromosome is", n.chr)
+ 
+  # Remove zero or negative positions
+  idx_negative <- ((gff1$V4 <= 0) | (gff1$V5 <= 0))
+  if (any(idx_negative)) {
+    pokazAttention("Some positions in the input data are <= 0. They will be removed")
+    gff1 <- gff1[!idx_negative, ]
+  }
   
-  
+  # Indexing
   gff1$idx = 1:nrow(gff1)
+  
   # Get chromosomes by format
   gff1 =  extractChrByFormat(gff1, s.chr)
   gff1 = gff1[order(gff1$chr),]
@@ -94,11 +102,12 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
   gff2$len.init = gff2$V5 - gff2$V4 + 1
   gff2$V9 = paste0(gff2$V9, ';len_init=', gff2$len.init)
   gff2$V2 = 'pannagram'
-  gff2$V4 = -1
-  gff2$V5 = -1
+  gff2$V4 = 0
+  gff2$V5 = 0
   gff2$V1 = gsub(acc1, acc2, gff2$V1)
   
   for(i.chr in 1:n.chr){
+    pokaz('Chromosome', i.chr)
     
     # ---
     # If there some regions to annotate from the chromosome i.chr
@@ -121,6 +130,7 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     }
     
     max.chr.len = max(nrow(v), max(abs(v[!is.na(v)])))
+    idx.chr = idx.chr[gff1$V5[idx.chr] <= max.chr.len]
     
     v = v[v[,1]!=0,]
     v = v[!is.na(v[,1]),]
@@ -143,8 +153,20 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
       gff2$V5[idx.chr] = v.corr[gff1$V5[idx.chr]]
     } else {
       w = getPrevNext(v.corr)
+      w$v.next[is.na(w$v.next)] = 0
+      w$v.prev[is.na(w$v.prev)] = 0
+      
       gff2$V4[idx.chr] = w$v.next[gff1$V4[idx.chr]]
       gff2$V5[idx.chr] = w$v.prev[gff1$V5[idx.chr]]
+      
+      # save(list = ls(), file = "tmp_workspace_gff2gff.RData")
+      
+      # If ids > length of the alignment, it will introduce NAs
+      # gff2$V4[is.na(gff2$V4)] = 0
+      # gff2$V5[is.na(gff2$V5)] = 0
+      
+      # if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
+      # if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
     }
     idx.chr = idx.chr[(gff2$V4[idx.chr] != 0) & (gff2$V5[idx.chr] != 0)]
     
@@ -159,12 +181,12 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
     idx.noneq[is.na(idx.noneq)] = 1
     
     if(sum(idx.noneq) > 0){
-      gff2$V4[idx.chr][idx.noneq == 1] = 0
-      gff2$V5[idx.chr][idx.noneq == 1] = 0  
+      gff2$V4[idx.chr[idx.noneq == 1]] = 0
+      gff2$V5[idx.chr[idx.noneq == 1]] = 0  
     }
     
-    if(sum(is.na(gff2$V4[idx.chr]) > 0)) stop('NA in gff2$V4[idx.chr]')
-    if(sum(is.na(gff2$V5[idx.chr]) > 0)) stop('NA in gff2$V5[idx.chr]')
+    if(sum(is.na(gff2$V4[idx.chr])) > 0) stop('NA in gff2$V4[idx.chr]')
+    if(sum(is.na(gff2$V5[idx.chr])) > 0) stop('NA in gff2$V5[idx.chr]')
   }
   
   idx.wrong.blocks = (sign(gff2$V4 * gff2$V5) != 1)
@@ -240,14 +262,14 @@ gff2gff <- function(acc1, acc2, # if one of the accessions is called 'pangen', t
 bed2bed <- function(bed1, 
                     ... # Use '...' to capture all other arguments
 ) {
-  
+  pokaz('bed2bed')
   # Convert BED to GFF-like format
   colnames.bed1 = colnames(bed1)
   colnames(bed1) = c('chrom', 'beg', 'end', 'name', 'score', 'strand')
   gff1 = data.frame(V1 = bed1$chrom,
                     V2 = 'tmp',
                     V3 = 'type',
-                    V4 = bed1$beg,
+                    V4 = bed1$beg + 1, # counting starts from 0
                     V5 = bed1$end,
                     V6 = bed1$score,
                     V7 = bed1$strand,
@@ -258,6 +280,7 @@ bed2bed <- function(bed1,
   # Call gff2gff function, passing all additional parameters through '...'
   gff2 = gff2gff(gff1 = gff1, 
                  ...)
+  gff2$V4 = gff2$V4 - 1  # counting starts from 0
   
   # Convert the output back to BED format
   bed2 = gff2[,c(1, 4, 5, 9, 6, 7)]
@@ -315,13 +338,11 @@ pos2pos <- function(pos1,
 extractChrByFormat <- function(gff, s.chr){
   
   n.gff = nrow(gff)
-  matched.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = TRUE)
-  if(length(matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
-  
   # Cheromosome ID
-  idx.chr.format <- grep(paste0(".*",s.chr,"\\d+"), gff$V1, value = F)
-  gff = gff[idx.chr.format,]
-  if(nrow(gff) < 0.7 * n.gff) stop('Check the chromosome formats (#2)')
+  gff.matched.chr.format <- grepl(paste0(".*",s.chr,"\\d+"), gff$V1)
+  if(sum(gff.matched.chr.format) < 0.7 * n.gff) stop('Check the chromosome formats (#1)')
+  
+  gff = gff[gff.matched.chr.format,]
   
   gff$chr <- sub(paste(".*",s.chr,"(\\d+)", sep = ''), "\\1", gff$V1)
   if(sum(is.na(gff$chr)) > 0) stop('Check the chromosome formats (#3)')

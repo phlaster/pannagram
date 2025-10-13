@@ -54,7 +54,7 @@ dotplot <- function(seq1, seq2, wsize, nmatch) {
   len1 = length(seq1) - wsize + 2
   len2 = length(seq2) - wsize + 2
   
-  pokaz(len1, len2, max(result$row), max(result$col))
+  # pokaz(len1, len2, max(result$row), max(result$col))
   p = invisible(
         ggplot(result, aes(x = row, y = col, fill = values, color = values)) +
         geom_tile(width = 1, height = 1, linewidth = 0.5) +

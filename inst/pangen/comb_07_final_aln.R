@@ -8,7 +8,6 @@ suppressMessages({
 })
 
 source(system.file("utils/utils.R", package = "pannagram"))
-source(system.file("pangen/comb_func_mafft_refine.R", package = "pannagram"))
 
 # ***********************************************************************
 # ---- Command line arguments ----
@@ -182,6 +181,9 @@ for(s.comb in pref.combinations){
         p1 = pos.aln[1, i.seq]
         p2 = pos.aln[2, i.seq]
         pos.tmp = p1:p2
+        if(length(pos.tmp) > length(tmp.nongap)){
+          save(list = ls(), file = "tmp_workspace_final.RData")
+        }
         pos.mx[i.seq, tmp.nongap] = pos.tmp
       }
       # aln.mx = aln.mx[,colSums(aln.mx != '-') != 0]

@@ -452,7 +452,7 @@ seqs.big = c()
 for(s.comb in s.combinations){
   i.chr = comb2ref(s.comb)
   pokaz('Chromosome', i.chr)
-  file.chr = paste0(path.seq, 'seq_cons_', i.chr, '.fasta')
+  file.chr = paste0(path.seq, 'seq_cons_', s.comb, ref.suff ,'.fasta')
   if(!file.exists(file.chr)) stop(paste0('File with the consensus sequence does not exist:', file.chr))
   s.chr = readFasta(file.chr)
   s.chr = seq2nt(s.chr)

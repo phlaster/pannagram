@@ -10,5 +10,5 @@ loop*
 R/
 man/
 NAMESPACE
-
+docs/content/paths.R
 

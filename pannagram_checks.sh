@@ -11,10 +11,10 @@ CONDAENV_NAME=$1 # "pannagram"
 PACKAGE_NAME=$2  # "pannagram"
 
 # Conda environment check
-if [[ "$CONDA_DEFAULT_ENV" != "$CONDAENV_NAME" ]]; then
-  echo -e "\n\033[31mThis script must be run inside the '$CONDAENV_NAME' conda environment. Use '$CONDAENV_NAME.yaml' to recreate it.\033[0m\n"
-  exit 1
-fi
+# if [[ "$CONDA_DEFAULT_ENV" != "$CONDAENV_NAME" ]]; then
+#   echo -e "\n\033[31mThis script must be run inside the '$CONDAENV_NAME' conda environment. Use '$CONDAENV_NAME.yaml' to recreate it.\033[0m\n"
+#   exit 1
+# fi
 
 # Check if R is within the Conda environment
 R_PATH=$(which R)

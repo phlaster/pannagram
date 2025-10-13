@@ -26,19 +26,17 @@ option_list <- list(
   make_option("--cores",             type = "integer",   default = 1,    help = "Number of cores to use for parallel processing"),
   make_option("--path.log",          type = "character", default = NULL, help = "Path for log files"),
   make_option("--log.level",         type = "character", default = NULL, help = "Level of log to be shown on the screen"),
-  make_option("--max.len.gap",       type = "integer",   default = NULL, help = "Max length of the gap")
+  make_option("--max.len.gap",       type = "integer",   default = NULL, help = "Max length of the gap"),
+  make_option("--num.batches",       type = "integer",   default = NA, help = "Max length of the gap")
 )
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser, args = args);
 
-
 #TODO: SHOULD BE PARAMATERS
 len.short = 50
 # len.large = 40000
 n.flank = 30
-
-# print(opt)
 
 # ***********************************************************************
 # ---- Logging ----
@@ -63,6 +61,11 @@ if (is.null(opt$max.len.gap)) {
 num.cores = opt$cores
 if(is.null(num.cores)) stop('Wrong number of cores: NULL')
 pokaz('Number of cores', num.cores, file=file.log.main, echo=echo.main)
+
+# Number of batches
+if(is.na(opt$num.batches)){
+  num.batches = num.cores
+}
 
 # Path with the MSA output (features)
 path.features.msa <- opt$path.features.msa
@@ -128,7 +131,14 @@ for(s.comb in pref.combinations){
       
       seqs <- DNAStringSet(seqs)
       
-      alignment = muscle(seqs, quiet = T)
+      # alignment = muscle(seqs, quiet = T)
+      
+      gc(); gc(reset = TRUE)
+      before <- sum(gc()[, "used"])
+      alignment <- muscle(seqs, quiet = TRUE)
+      after <- sum(gc()[, "used"])
+      cat("Delta muscle", after - before, "\n")
+      
       aln = as.character(alignment)
       
       # save(list = ls(), file = "tmp_workspace_s.RData")
@@ -145,12 +155,19 @@ for(s.comb in pref.combinations){
         mx.pos[s != '-', acc] = aln.info$V3[i.s]:aln.info$V4[i.s]
       }
       mx.list[[i.aln]] = mx.pos
+      
+      gc(); gc(reset = TRUE)
+      before <- sum(gc()[, "used"])
+      
       rm(aln.info)
       rm(aln)
       rm(mx.pos)
       rm(alignment)
       rm(seqs)
       gc()
+      
+      after <- sum(gc()[, "used"])
+      cat("Delta free up space", after - before, "\n")
     }
     
     gc()

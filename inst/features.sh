@@ -109,7 +109,7 @@ if [ "$run_snp_pi" = true ]; then # -snp_pi
             --file.pi "${output_file}.sites.pi"
 
         echo "Plink.."
-        plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr &>/dev/null
+        plink --vcf "${vcf_file}" --distance --out "${vcf_file}.dist" --allow-extra-chr # &>/dev/null
 
         Rscript $INSTALLED_PATH/analys/analys_04_snp_dist.R \
             --path.figures ${path_plots_snp} \

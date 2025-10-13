@@ -129,7 +129,7 @@ else
         IFS=',' read -ra refs_all <<< "$ref_set"
 
         # Check if the number of reference genomes is sufficient
-        if (( ${#refs_all[@]} -lt ref_num )); then
+        if (( ${#refs_all[@]} < $ref_num )); then
             genomes_needed=$((ref_num - ${#refs_all[@]}))
             with_level 1 pokaz_attention "Not enough reference genomes. Adding $genomes_needed genome(s)."
 
@@ -261,7 +261,6 @@ if [ -z "${comb_file}" ]; then
         fi
 
     else
-
         # Write combinations
         if [ "$nchr" -ne 0 ] && [ "$nchr_ref" -ne 0 ]; then
             for N in $(seq 1 $nchr); do
@@ -1519,7 +1518,7 @@ pokaz_attention "Extra steps are running.."
 
 # Get sequences of extra long fragments - 1
 
-with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments - 1."
 
 # Paths
 path_extra_long="${path_extra}long/"
@@ -1562,7 +1561,7 @@ fi
 source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Align extra long fragments - 1
-with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments - 1."
 
 # Logs
 step_name="step${step_num}_comb_10"
@@ -1601,7 +1600,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Insert extra long fragments - 1
 
-with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments - 1."
 
 # Logs
 step_name="step${step_num}_comb_11"
@@ -1636,7 +1635,7 @@ fi
 source $INSTALLED_PATH/utils/chunk_step_done.sh
 
 # Get sequences of extra long fragments - 2
-with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Get sequences of extra long fragments - 2."
 
 # Paths
 path_extra_long2="${path_extgra}long2/"
@@ -1682,7 +1681,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 # ----------------------------------------------
 # Align extra long fragments - 2
 
-with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Align extra long fragments - 2."
 
 # Logs
 step_name="step${step_num}_comb_10"
@@ -1723,7 +1722,7 @@ source $INSTALLED_PATH/utils/chunk_step_done.sh
 # ----------------------------------------------
 # Insert extra long fragments - 2
 
-with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments."
+with_level 1 pokaz_stage "Step ${step_num}. Insert extra long fragments - 2."
 
 # Logs
 step_name="step${step_num}_comb_11"

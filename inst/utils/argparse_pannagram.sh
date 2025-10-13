@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
         
         # Required parameters
         -path_out|-path_proj|-path_project) path_project="$2"; shift 2; required_params+=("path_project") ;;
-        -path_in)                path_in="$2"; shift 2; required_params+=("path_in") ;; # path with all genomes in fasta format
+        -path_in| -path_genomes)                 path_in="$2"; shift 2; required_params+=("path_in") ;; # path with all genomes in fasta format
 
         -s|-stage|-step) step_start="$2"; shift 2 ;; # first stage to run from, when the stage is not provided - the last interrupted stage withh be re-run
         -e|-end)         step_end="$2"; shift 2 ;;   # last stage to run to
@@ -61,7 +61,11 @@ while [ $# -gt 0 ]; do
 
         -one2one)        one2one="T"; shift 1 ;;                 # do compare chroms one-to-one (default in REF and MSA modes)
         -all2all)        one2one="F"; shift 1 ;;                 # do compare chroms all-to-all (default in PRE mode)
-        -incl_reps |-include_repeats) purge_reps="F"; shift 1 ;; # repeats filtration
+        -incl_reps |-include_repeats) purge_reps="F"; shift 1 ;; # keep repeats
+        -purge_repeats | -purge_reps)  
+            pokaz_attention "Option -purge_repeats/-purge_reps is deprecated. Repeats are filtered by default now. Use -include_repeats if you do NOT want to filter repeats."  
+            exit 1 
+            ;; 
         -rev )           flag_rev="T"; shift 1 ;;                # reverse parts
         -orf )           flag_orf="T"; shift 1 ;;                # run ORF finder
         -purge_contigs)  purge_contigs="T"; shift 1 ;;
@@ -88,6 +92,9 @@ if [[ ${#unrecognized_options[@]} -gt 0 ]]; then
     exit 1
 fi
 
+# Validate one2one/all2all conflict
+
+
 # Determine mode_pangen
 name_mode_pre='PRE'
 name_mode_ref='REF'
@@ -109,11 +116,20 @@ else
     exit 1
 fi
 
-# Validate one2one/all2all conflict
+# Validate one2one/all2all
 if [[ -n "$one2one" && "$one2one" != "T" && "$one2one" != "F" ]]; then
-    pokaz_error "Error: -all2all and -one2one cannot be used together"
+    pokaz_error "Error: -one2one must be 'T' or 'F'"
     exit 1
+elif [[ -z "$one2one" ]]; then
+    # Parameters -all2all and -one2one should be taken with default values
+    if [[ "$mode_pangen" == "$name_mode_pre" ]]; then
+        one2one="F"
+    else
+        one2one="T"
+    fi
 fi
+
+# Paths
 
 path_in=$(add_symbol_if_missing "$path_in" "/")
 path_project=$(add_symbol_if_missing "$path_project" "/")
