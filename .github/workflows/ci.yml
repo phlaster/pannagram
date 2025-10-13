@@ -23,21 +23,22 @@ jobs:
         eval "$(micromamba shell hook --shell=bash)"
         micromamba activate pannagram
         echo "CONDA_PREFIX: $CONDA_PREFIX"
-        which R || { echo "R not found in PATH"; exit 1; }
+        which R
+        Rscript -e "sessionInfo()"
         ./user.sh
 
     - name: Prepare test data
       run: |
-        PATH_DATA="_test_data"
-        PATH_TOOLS="_test_tools"
-        mkdir -p $PATH_DATA $PATH_TOOLS
-        echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "${PATH_DATA}/ecoli.txt"
-        echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "${PATH_DATA}/ecoli.txt"
-        cd $PATH_TOOLS
+        ROOT_DIR=$(pwd)
+        PATH_DATA="$ROOT_DIR/_test_data"
+        PATH_TOOLS="$ROOT_DIR/_test_tools"
+        mkdir -p "$PATH_DATA" "$PATH_TOOLS"
+        echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "$PATH_DATA/ecoli.txt"
+        echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "$PATH_DATA/ecoli.txt"
+        cd "$PATH_TOOLS"
         git clone https://github.com/iganna/poputils.git
         cd poputils/genomes
-        ./genbank_download_list.sh -f ../../$PATH_DATA/ecoli.txt -p ../../$PATH_DATA
-        cd ../../..
+        ./genbank_download_list.sh -f "$PATH_DATA/ecoli.txt" -p "$PATH_DATA"
 
     - name: Run pannagram test
       run: |
