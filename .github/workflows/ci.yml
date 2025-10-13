@@ -16,10 +16,14 @@ jobs:
       with:
         environment-file: conda-lock.yml
         environment-name: pannagram
-        activate-environment: pannagram
+        activate-environment: false
 
-    - name: Install package
+    - name: Activate environment and install package
       run: |
+        eval "$(micromamba shell hook --shell=bash)"
+        micromamba activate pannagram
+        echo "CONDA_PREFIX: $CONDA_PREFIX"
+        which R || { echo "R not found in PATH"; exit 1; }
         ./user.sh
 
     - name: Prepare test data
@@ -37,6 +41,8 @@ jobs:
 
     - name: Run pannagram test
       run: |
+        eval "$(micromamba shell hook --shell=bash)"
+        micromamba activate pannagram
         pannagram -pre \
           -path_in _test_data/ \
           -path_out _test_output \
