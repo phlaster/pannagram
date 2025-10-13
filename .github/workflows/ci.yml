@@ -17,74 +17,125 @@ on:
         default: 'true'
 
 jobs:
-  test:
+  test-linux:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run_on_linux == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: conda-lock.yml
+          environment-name: pannagram
+          activate-environment: false
+          create-args: --platform=linux-64
+
+      - name: Activate environment and install package
+        run: |
+          eval "$(micromamba shell hook --shell=bash)"
+          micromamba activate pannagram
+          
+          echo "=== Environment verification ==="
+          echo "OS: $OSTYPE"
+          echo "Architecture: $(uname -m)"
+          echo "CONDA_PREFIX: $CONDA_PREFIX"
+          which R
+          R --version | head -n 1
+          
+          ./user.sh
+
+      - name: Prepare test data
+        run: |
+          ROOT_DIR=$(pwd)
+          PATH_DATA="$ROOT_DIR/_test_data"
+          PATH_TOOLS="$ROOT_DIR/_test_tools"
+          
+          mkdir -p "$PATH_DATA" "$PATH_TOOLS"
+          echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "$PATH_DATA/ecoli.txt"
+          echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "$PATH_DATA/ecoli.txt"
+          
+          cd "$PATH_TOOLS"
+          git clone https://github.com/iganna/poputils.git
+          cd poputils/genomes
+          
+          ./genbank_download_list.sh -f "$PATH_DATA/ecoli.txt" -p "$PATH_DATA"
+
+      - name: Run pannagram test
+        run: |
+          eval "$(micromamba shell hook --shell=bash)"
+          micromamba activate pannagram
+          
+          pannagram -pre \
+            -path_in _test_data/ \
+            -path_out _test_output \
+            -ref GCA_000005845.2 \
+            -cores 2
+
+  test-macos:
     runs-on: ${{ matrix.os }}
-    if: ${{ (matrix.os == 'ubuntu-latest' && inputs.run_on_linux == 'true') || (matrix.os == 'macos-latest' && inputs.run_on_mac == 'true') || (matrix.os == 'macos-14' && inputs.run_on_mac == 'true') }}
+    if: ${{ inputs.run_on_mac == 'true' }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-14]
-
+        os: [macos-latest, macos-14]
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.branch }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
 
-    - name: Set up micromamba
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: conda-lock.yml
-        environment-name: pannagram
-        activate-environment: false
-        create-args: >-
-          --override-channels
-          ${{ matrix.os == 'ubuntu-latest' && '--platform=linux-64' || 
-              '--platform=osx-64' }}
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: conda-lock.yml
+          environment-name: pannagram
+          activate-environment: false
+          create-args: --platform=osx-64
 
-    - name: Activate environment and install package
-      run: |
-        eval "$(micromamba shell hook --shell=bash)"
-        micromamba activate pannagram
-        
-        echo "=== Environment verification ==="
-        echo "OS: $OSTYPE"
-        echo "Architecture: $(uname -m)"
-        echo "CONDA_PREFIX: $CONDA_PREFIX"
-        which R
-        R --version | head -n 1
-        
-        ./user.sh
+      - name: Activate environment and install package
+        run: |
+          eval "$(micromamba shell hook --shell=bash)"
+          micromamba activate pannagram
+          
+          echo "=== Environment verification ==="
+          echo "OS: $OSTYPE"
+          echo "Architecture: $(uname -m)"
+          echo "CONDA_PREFIX: $CONDA_PREFIX"
+          which R
+          R --version | head -n 1
+          
+          ./user.sh
 
-    - name: Prepare test data
-      run: |
-        ROOT_DIR=$(pwd)
-        PATH_DATA="$ROOT_DIR/_test_data"
-        PATH_TOOLS="$ROOT_DIR/_test_tools"
-        
-        mkdir -p "$PATH_DATA" "$PATH_TOOLS"
-        echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "$PATH_DATA/ecoli.txt"
-        echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "$PATH_DATA/ecoli.txt"
-        
-        cd "$PATH_TOOLS"
-        git clone https://github.com/iganna/poputils.git
-        cd poputils/genomes
-        
-        # Add macOS compatibility
-        if [[ "$OSTYPE" == "darwin"* ]]; then
+      - name: Prepare test data
+        run: |
+          ROOT_DIR=$(pwd)
+          PATH_DATA="$ROOT_DIR/_test_data"
+          PATH_TOOLS="$ROOT_DIR/_test_tools"
+          
+          mkdir -p "$PATH_DATA" "$PATH_TOOLS"
+          echo -e "GCA_000005845.2\nGCA_000008865.2\nGCA_042189615.1" > "$PATH_DATA/ecoli.txt"
+          echo -e "GCA_042016495.1\nGCA_042017145.1\nGCA_042017895.1" >> "$PATH_DATA/ecoli.txt"
+          
+          cd "$PATH_TOOLS"
+          git clone https://github.com/iganna/poputils.git
+          cd poputils/genomes
+          
+          # Add macOS compatibility
           echo "Running on macOS - applying compatibility patches..."
           sed -i '' 's|/proc/cpuinfo|/dev/null|g' genbank_download_list.sh
-        fi
-        
-        ./genbank_download_list.sh -f "$PATH_DATA/ecoli.txt" -p "$PATH_DATA"
+          
+          ./genbank_download_list.sh -f "$PATH_DATA/ecoli.txt" -p "$PATH_DATA"
 
-    - name: Run pannagram test
-      run: |
-        eval "$(micromamba shell hook --shell=bash)"
-        micromamba activate pannagram
-        
-        CORES=1
-        pannagram -pre \
-          -path_in _test_data/ \
-          -path_out _test_output \
-          -ref GCA_000005845.2 \
-          -cores $CORES
+      - name: Run pannagram test
+        run: |
+          eval "$(micromamba shell hook --shell=bash)"
+          micromamba activate pannagram
+          
+          pannagram -pre \
+            -path_in _test_data/ \
+            -path_out _test_output \
+            -ref GCA_000005845.2 \
+            -cores 1
