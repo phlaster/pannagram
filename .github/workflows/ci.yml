@@ -8,7 +8,7 @@ on:
         required: true
         default: 'main'
       run_on_mac:
-        description: 'Run tests on macOS? (Intel and Apple Silicon)'
+        description: 'Run tests on macOS?'
         required: false
         default: 'true'
       run_on_linux:
@@ -31,7 +31,6 @@ jobs:
         with:
           environment-file: conda-lock.yml
           environment-name: pannagram
-          activate: false
           create-args: --platform=linux-64
 
       - name: Activate environment and run tests
@@ -41,11 +40,8 @@ jobs:
           .github/ci_scripts/run_tests.sh
 
   test-macos:
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     if: ${{ inputs.run_on_mac == 'true' }}
-    strategy:
-      matrix:
-        os: [macos-latest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,7 +53,6 @@ jobs:
         with:
           environment-file: conda-lock.yml
           environment-name: pannagram
-          activate: false
           create-args: --platform=osx-64
 
       - name: Activate environment and run tests
