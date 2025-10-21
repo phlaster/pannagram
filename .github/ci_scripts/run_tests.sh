@@ -60,8 +60,8 @@ fi
 
 # Run the pannagram test
 pannagram -pre \
-  -path_in _test_data/ \
-  -path_out _test_output \
+  -path_in "$ROOT_DIR/_test_data" \
+  -path_out "$ROOT_DIR/_test_output" \
   -ref GCA_000005845.2 \
   -cores $CORES
 
